@@ -108,7 +108,7 @@
     "updater": {
       "active": true,
       "dialog": true,
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IERDQjZEMTgxOEY4OTIwNDcKUldSSElJbVBnZEcyM1BSUklxWWRsWStXYnVsWU1mODY3YzZCWCtTZzJrUGJsZHpNY1h1S3hhc2cK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDc3NDVGMDc0RUQ3MjRCOEYKUldTUFMzTHRkUEJGZDdMVTRjSGxEQjNHMzhUUHVyaFJZa2ZqT0Q2emlRMmFrZGpiamd6SzVEWWsK",
       "endpoints": [
         "https://raw.githubusercontent.com/An0Mas/gbfr-logs/main/update.json"
       ],
