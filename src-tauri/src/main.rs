@@ -3,10 +3,11 @@
 
 use std::{
     collections::HashMap,
-    fs::File,
+    fs::{self, File},
     io::Write,
-    path::Path,
+    path::{Path, PathBuf},
     sync::atomic::{AtomicBool, Ordering},
+    time::{SystemTime, UNIX_EPOCH},
 };
 
 use anyhow::Context;
@@ -299,6 +300,299 @@ struct EncounterStateResponse {
 #[derive(Debug, Deserialize)]
 struct ParseOptions {
     targets: Vec<EnemyType>,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct DatabaseImportResponse {
+    source_path: String,
+    destination_path: String,
+    backup_path: Option<String>,
+}
+
+impl From<db::DatabaseImportSummary> for DatabaseImportResponse {
+    fn from(summary: db::DatabaseImportSummary) -> Self {
+        Self {
+            source_path: path_to_string(summary.source_path),
+            destination_path: path_to_string(summary.destination_path),
+            backup_path: summary.backup_path.map(path_to_string),
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct SettingsExportPayload {
+    version: u32,
+    meter_settings: serde_json::Value,
+    language: Option<String>,
+    exported_at: Option<String>,
+    source: Option<String>,
+}
+
+#[tauri::command]
+fn import_original_logs_database() -> Result<DatabaseImportResponse, String> {
+    db::import_first_original_database()
+        .map(DatabaseImportResponse::from)
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn import_logs_database_from_file() -> Result<DatabaseImportResponse, String> {
+    let file_path = FileDialogBuilder::new()
+        .add_filter("SQLite database", &["db", "sqlite", "sqlite3"])
+        .set_title("Import GBFR Logs Database")
+        .pick_file()
+        .ok_or("No file selected!")?;
+
+    db::import_database_from_path(&file_path)
+        .map(DatabaseImportResponse::from)
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn export_settings_to_file(payload: SettingsExportPayload) -> Result<String, String> {
+    let file_path = FileDialogBuilder::new()
+        .add_filter("json", &["json"])
+        .set_file_name("gbfr-logs-an0mas-settings.json")
+        .set_title("Export GBFR Logs Settings")
+        .save_file()
+        .ok_or("No file selected!")?;
+
+    let file = File::create(&file_path).map_err(|e| e.to_string())?;
+    serde_json::to_writer_pretty(file, &payload).map_err(|e| e.to_string())?;
+
+    Ok(path_to_string(file_path))
+}
+
+#[tauri::command]
+fn import_settings_from_file() -> Result<SettingsExportPayload, String> {
+    let file_path = FileDialogBuilder::new()
+        .add_filter("json", &["json"])
+        .set_title("Import GBFR Logs Settings")
+        .pick_file()
+        .ok_or("No file selected!")?;
+
+    let contents = fs::read_to_string(file_path).map_err(|e| e.to_string())?;
+    serde_json::from_str(&contents).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn import_settings_from_original() -> Result<SettingsExportPayload, String> {
+    let storage_dir = original_local_storage_dir()?;
+    let meter_settings = read_latest_local_storage_json(&storage_dir, "meter-settings")?;
+    let language = read_latest_local_storage_language(&storage_dir, "i18nextLng");
+
+    Ok(SettingsExportPayload {
+        version: 1,
+        meter_settings,
+        language,
+        exported_at: Some(unix_timestamp_string()),
+        source: Some(path_to_string(storage_dir)),
+    })
+}
+
+fn original_local_storage_dir() -> Result<PathBuf, String> {
+    let local_app_data =
+        std::env::var_os("LOCALAPPDATA").ok_or("LOCALAPPDATA is not set".to_string())?;
+
+    let storage_dir = PathBuf::from(local_app_data)
+        .join("com.false")
+        .join("EBWebView")
+        .join("Default")
+        .join("Local Storage")
+        .join("leveldb");
+
+    if !storage_dir.exists() {
+        return Err(format!(
+            "Original GBFR Logs localStorage was not found at {}.",
+            storage_dir.display()
+        ));
+    }
+
+    Ok(storage_dir)
+}
+
+fn read_latest_local_storage_json(
+    storage_dir: &Path,
+    key: &str,
+) -> Result<serde_json::Value, String> {
+    let key_bytes = key.as_bytes();
+    let mut best_match: Option<(SystemTime, usize, serde_json::Value)> = None;
+
+    for file_path in local_storage_files(storage_dir)? {
+        let modified = file_path
+            .metadata()
+            .and_then(|metadata| metadata.modified())
+            .unwrap_or(UNIX_EPOCH);
+        let bytes = fs::read(&file_path).map_err(|e| e.to_string())?;
+
+        for key_index in find_all(&bytes, key_bytes) {
+            if let Some(value) = parse_json_object_after(&bytes, key_index) {
+                let should_replace = best_match
+                    .as_ref()
+                    .map(|(best_modified, best_index, _)| {
+                        modified > *best_modified
+                            || (modified == *best_modified && key_index > *best_index)
+                    })
+                    .unwrap_or(true);
+
+                if should_replace {
+                    best_match = Some((modified, key_index, value));
+                }
+            }
+        }
+    }
+
+    best_match
+        .map(|(_, _, value)| value)
+        .ok_or_else(|| format!("Could not find {key} in the original GBFR Logs localStorage."))
+}
+
+fn read_latest_local_storage_language(storage_dir: &Path, key: &str) -> Option<String> {
+    let key_bytes = key.as_bytes();
+    let mut best_match: Option<(SystemTime, usize, String)> = None;
+
+    let files = local_storage_files(storage_dir).ok()?;
+    for file_path in files {
+        let modified = file_path
+            .metadata()
+            .and_then(|metadata| metadata.modified())
+            .unwrap_or(UNIX_EPOCH);
+        let bytes = fs::read(&file_path).ok()?;
+
+        for key_index in find_all(&bytes, key_bytes) {
+            if let Some(language) = parse_language_after(&bytes, key_index + key_bytes.len()) {
+                let should_replace = best_match
+                    .as_ref()
+                    .map(|(best_modified, best_index, _)| {
+                        modified > *best_modified
+                            || (modified == *best_modified && key_index > *best_index)
+                    })
+                    .unwrap_or(true);
+
+                if should_replace {
+                    best_match = Some((modified, key_index, language));
+                }
+            }
+        }
+    }
+
+    best_match.map(|(_, _, language)| language)
+}
+
+fn local_storage_files(storage_dir: &Path) -> Result<Vec<PathBuf>, String> {
+    let entries = fs::read_dir(storage_dir).map_err(|e| e.to_string())?;
+    let mut files = Vec::new();
+
+    for entry in entries {
+        let file_path = entry.map_err(|e| e.to_string())?.path();
+        let extension = file_path
+            .extension()
+            .and_then(|extension| extension.to_str());
+
+        if matches!(extension, Some("log") | Some("ldb")) {
+            files.push(file_path);
+        }
+    }
+
+    Ok(files)
+}
+
+fn find_all(bytes: &[u8], needle: &[u8]) -> Vec<usize> {
+    if needle.is_empty() || bytes.len() < needle.len() {
+        return Vec::new();
+    }
+
+    bytes
+        .windows(needle.len())
+        .enumerate()
+        .filter_map(|(index, window)| (window == needle).then_some(index))
+        .collect()
+}
+
+fn parse_json_object_after(bytes: &[u8], start: usize) -> Option<serde_json::Value> {
+    let open_index = bytes[start..].iter().position(|byte| *byte == b'{')? + start;
+    let mut depth = 0;
+    let mut in_string = false;
+    let mut escape = false;
+
+    for index in open_index..bytes.len() {
+        let byte = bytes[index];
+
+        if in_string {
+            if escape {
+                escape = false;
+            } else if byte == b'\\' {
+                escape = true;
+            } else if byte == b'"' {
+                in_string = false;
+            }
+            continue;
+        }
+
+        match byte {
+            b'"' => in_string = true,
+            b'{' => depth += 1,
+            b'}' => {
+                depth -= 1;
+                if depth == 0 {
+                    let json_bytes = &bytes[open_index..=index];
+                    let json = std::str::from_utf8(json_bytes).ok()?;
+                    return serde_json::from_str(json).ok();
+                }
+            }
+            _ => {}
+        }
+    }
+
+    None
+}
+
+fn parse_language_after(bytes: &[u8], start: usize) -> Option<String> {
+    const SUPPORTED_LANGUAGES: &[&str] = &[
+        "en", "jp", "ja-JP", "ko-KR", "fr-FR", "es-ES", "it-IT", "zh-CN", "zh-TW", "bp", "ge",
+    ];
+
+    let end = bytes.len().min(start + 64);
+    let mut index = start;
+
+    while index < end {
+        if is_language_byte(bytes[index]) {
+            let token_start = index;
+            while index < end && is_language_byte(bytes[index]) {
+                index += 1;
+            }
+
+            let token = std::str::from_utf8(&bytes[token_start..index]).ok()?;
+            if token == "ja-JP" {
+                return Some("jp".to_string());
+            }
+
+            if SUPPORTED_LANGUAGES.contains(&token) {
+                return Some(token.to_string());
+            }
+        }
+
+        index += 1;
+    }
+
+    None
+}
+
+fn is_language_byte(byte: u8) -> bool {
+    byte.is_ascii_alphabetic() || byte == b'-'
+}
+
+fn path_to_string(path: PathBuf) -> String {
+    path.to_string_lossy().to_string()
+}
+
+fn unix_timestamp_string() -> String {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|duration| duration.as_secs().to_string())
+        .unwrap_or_else(|_| "0".to_string())
 }
 
 #[tauri::command]
@@ -683,6 +977,11 @@ fn main() {
             fetch_logs,
             delete_logs,
             delete_all_logs,
+            import_original_logs_database,
+            import_logs_database_from_file,
+            export_settings_to_file,
+            import_settings_from_file,
+            import_settings_from_original,
             toggle_always_on_top,
             export_damage_log_to_file,
             set_debug_mode,

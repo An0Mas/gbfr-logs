@@ -1,3 +1,4 @@
+import { useMeterSettingsStore } from "@/stores/useMeterSettingsStore";
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 import {
   ActionIcon,
@@ -8,6 +9,7 @@ import {
   Divider,
   Fieldset,
   Flex,
+  Group,
   Menu,
   Select,
   Slider,
@@ -18,12 +20,28 @@ import {
 import { DotsSixVertical } from "@phosphor-icons/react";
 import { invoke } from "@tauri-apps/api";
 import { useState } from "react";
+import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import useSettings from "./useSettings";
+
+type DatabaseImportResponse = {
+  sourcePath: string;
+  destinationPath: string;
+  backupPath?: string | null;
+};
+
+type SettingsExportPayload = {
+  version: number;
+  meterSettings: unknown;
+  language?: string | null;
+  exportedAt?: string | null;
+  source?: string | null;
+};
 
 const SettingsPage = () => {
   const { t, i18n } = useTranslation();
   const [debugMode, setDebugMode] = useState(false);
+  const [isMigrating, setIsMigrating] = useState(false);
 
   const {
     color_1,
@@ -51,6 +69,104 @@ const SettingsPage = () => {
     setDebugMode(enabled);
     invoke("set_debug_mode", { enabled });
     console.info("Debug Mode:", enabled ? "Enabled" : "Disabled");
+  };
+
+  const showDatabaseImportResult = (result: DatabaseImportResponse) => {
+    const backupMessage = result.backupPath ? ` Backup: ${result.backupPath}` : "";
+    toast.success(`Imported logs database from ${result.sourcePath}.${backupMessage}`);
+  };
+
+  const importOriginalLogsDatabase = async () => {
+    if (!window.confirm(t("ui.import-logs-database-confirmation"))) return;
+
+    setIsMigrating(true);
+    try {
+      const result = await invoke<DatabaseImportResponse>("import_original_logs_database");
+      showDatabaseImportResult(result);
+    } catch (e) {
+      toast.error(`Failed to import original logs database: ${e}`);
+    } finally {
+      setIsMigrating(false);
+    }
+  };
+
+  const importLogsDatabaseFromFile = async () => {
+    if (!window.confirm(t("ui.import-logs-database-confirmation"))) return;
+
+    setIsMigrating(true);
+    try {
+      const result = await invoke<DatabaseImportResponse>("import_logs_database_from_file");
+      showDatabaseImportResult(result);
+    } catch (e) {
+      toast.error(`Failed to import logs database: ${e}`);
+    } finally {
+      setIsMigrating(false);
+    }
+  };
+
+  const currentSettingsPayload = (): SettingsExportPayload => ({
+    version: 1,
+    meterSettings: JSON.parse(localStorage.getItem("meter-settings") ?? "{}"),
+    language: localStorage.getItem("i18nextLng") ?? i18n.language,
+    exportedAt: new Date().toISOString(),
+    source: "GBFR Logs An0Mas",
+  });
+
+  const applySettingsPayload = async (payload: SettingsExportPayload) => {
+    if (!payload.meterSettings) {
+      throw new Error("Selected settings file does not contain meterSettings.");
+    }
+
+    localStorage.setItem("meter-settings", JSON.stringify(payload.meterSettings));
+
+    if (payload.language) {
+      localStorage.setItem("i18nextLng", payload.language);
+      await i18n.changeLanguage(payload.language);
+    }
+
+    useMeterSettingsStore.persist.rehydrate();
+  };
+
+  const exportSettingsToFile = async () => {
+    setIsMigrating(true);
+    try {
+      const filePath = await invoke<string>("export_settings_to_file", { payload: currentSettingsPayload() });
+      toast.success(`Exported settings to ${filePath}`);
+    } catch (e) {
+      toast.error(`Failed to export settings: ${e}`);
+    } finally {
+      setIsMigrating(false);
+    }
+  };
+
+  const importSettingsFromFile = async () => {
+    if (!window.confirm(t("ui.import-settings-confirmation"))) return;
+
+    setIsMigrating(true);
+    try {
+      const payload = await invoke<SettingsExportPayload>("import_settings_from_file");
+      await applySettingsPayload(payload);
+      toast.success("Imported settings.");
+    } catch (e) {
+      toast.error(`Failed to import settings: ${e}`);
+    } finally {
+      setIsMigrating(false);
+    }
+  };
+
+  const importSettingsFromOriginal = async () => {
+    if (!window.confirm(t("ui.import-settings-confirmation"))) return;
+
+    setIsMigrating(true);
+    try {
+      const payload = await invoke<SettingsExportPayload>("import_settings_from_original");
+      await applySettingsPayload(payload);
+      toast.success("Imported settings from original GBFR Logs.");
+    } catch (e) {
+      toast.error(`Failed to import original settings: ${e}`);
+    } finally {
+      setIsMigrating(false);
+    }
   };
 
   return (
@@ -188,6 +304,32 @@ const SettingsPage = () => {
               )}
             </Droppable>
           </DragDropContext>
+        </Stack>
+      </Fieldset>
+      <Fieldset legend={t("ui.data-migration")} mt="md">
+        <Stack>
+          <Text size="sm">{t("ui.logs-database")}</Text>
+          <Group>
+            <Button loading={isMigrating} onClick={importOriginalLogsDatabase}>
+              {t("ui.import-original-logs-database")}
+            </Button>
+            <Button loading={isMigrating} variant="light" onClick={importLogsDatabaseFromFile}>
+              {t("ui.import-selected-logs-database")}
+            </Button>
+          </Group>
+          <Divider />
+          <Text size="sm">{t("ui.app-settings")}</Text>
+          <Group>
+            <Button loading={isMigrating} onClick={importSettingsFromOriginal}>
+              {t("ui.import-original-settings")}
+            </Button>
+            <Button loading={isMigrating} variant="light" onClick={importSettingsFromFile}>
+              {t("ui.import-settings-file")}
+            </Button>
+            <Button loading={isMigrating} variant="light" onClick={exportSettingsToFile}>
+              {t("ui.export-settings-file")}
+            </Button>
+          </Group>
         </Stack>
       </Fieldset>
     </Box>
