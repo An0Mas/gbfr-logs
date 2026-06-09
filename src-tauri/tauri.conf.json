@@ -6,8 +6,8 @@
     "distDir": "../dist"
   },
   "package": {
-    "productName": "GBFR Logs",
-    "version": "1.8.1"
+    "productName": "GBFR Logs An0Mas",
+    "version": "1.8.2"
   },
   "tauri": {
     "allowlist": {
@@ -80,9 +80,9 @@
         "msi",
         "updater"
       ],
-      "identifier": "com.false",
-      "longDescription": "GBFR Logs - DPS Meter for Granblue Fantasy: Relink",
-      "shortDescription": "GBFR Logs",
+      "identifier": "com.an0mas.gbfr-logs",
+      "longDescription": "GBFR Logs An0Mas - DPS Meter for Granblue Fantasy: Relink",
+      "shortDescription": "GBFR Logs An0Mas",
       "icon": [
         "icons/32x32.png",
         "icons/128x128.png",
