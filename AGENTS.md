@@ -28,6 +28,7 @@ This file contains repository-specific instructions for Codex agents working on 
 
 - Use feature branches for code/config/doc changes; do not commit directly to `main` unless the user explicitly asks.
 - Use PRs for AI-authored code/config changes.
+- If PR creation or push is unavailable, report the branch, commit, diff summary, and blocker instead of changing the merge strategy.
 - Keep generated build artifacts out of Git unless the repo already tracks them for that purpose.
 - Put temporary logs, scratch notes, and installation logs outside the repository in a local scratch/work directory.
 - Before changing release, updater, DB migration, hook/protocol, or parser behavior, check the existing code paths and repository documentation first.
@@ -55,6 +56,22 @@ Stop and ask the user before proceeding if:
 - Do not modify GitHub Actions workflows unless the task explicitly requires it.
 - If CI behavior changes, explain the expected impact on build, test, release, and updater workflows.
 - Do not add secrets, tokens, certificates, or signing material to workflow files.
+
+## Task Risk Levels
+
+- Docs-only: read relevant docs, edit minimal files, and skip app build/test unless generated docs or checked examples are affected.
+- Frontend UI: run `npm run tsc`, `npm run lint`, and `npm run build`.
+- Parser/protocol/hook: run `cargo check --verbose`, `cargo test --verbose`, and relevant hook/protocol builds.
+- DB migration: verify backup behavior, migration execution, and import/replace behavior with manual notes or tests.
+- Release/updater: follow the Release Checklist exactly and do not publish without explicit user approval.
+
+## Implementation Style
+
+- Prefer small, focused changes over broad refactors.
+- Preserve existing architecture, naming, and file ownership unless the task explicitly requests redesign.
+- Follow nearby patterns before introducing new abstractions.
+- Do not add dependencies unless the user approves or the benefit is clearly justified.
+- For UI changes, keep behavior and wording consistent with existing components.
 
 ## Standard Verification
 
