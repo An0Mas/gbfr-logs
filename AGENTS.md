@@ -11,12 +11,18 @@ This file contains repository-specific instructions for Codex agents working on 
 - `origin` is `https://github.com/An0Mas/gbfr-logs.git`; `upstream` is `https://github.com/false-spring/gbfr-logs.git`.
 - Treat `upstream` as read-only unless the user explicitly changes that policy.
 
+## Environment Assumptions
+
+- Primary development and release verification is done on Windows.
+- Paths in this document use Windows-style paths unless otherwise noted.
+- Release packaging, MSI install checks, updater checks, and AppData checks must be verified on Windows.
+
 ## Repo Identity
 
 - This fork ships as `GBFR Logs An0Mas`, side-by-side with upstream `GBFR Logs`.
 - Keep the Tauri bundle identifier as `com.an0mas.gbfr-logs` unless the user explicitly requests another app identity.
 - Do not switch updater endpoints, README release links, or release assets back to `false-spring/gbfr-logs` unless the task is explicitly about upstream sync.
-- The README still contains upstream-oriented links; verify intended target before editing user-facing release/install text.
+- README and other user-facing release/install text may contain upstream-oriented links; verify intended target before editing.
 
 ## Work And Git Flow
 
@@ -24,7 +30,25 @@ This file contains repository-specific instructions for Codex agents working on 
 - Use PRs for AI-authored code/config changes.
 - Keep generated build artifacts out of Git unless the repo already tracks them for that purpose.
 - Put temporary logs, scratch notes, and installation logs under `C:\AI_Work\.ai-work\codex-work\<YYYYMMDD>-<task>`, not in the repo.
-- Before changing release, updater, DB migration, hook/protocol, or parser behavior, check the existing code paths and the Vault project note if available.
+- Before changing release, updater, DB migration, hook/protocol, or parser behavior, check the existing code paths and `C:\Obsidian\codex-knowledge-vault\projects\gbfr-logs\gbfr-logs.md` when available.
+
+## Before Editing
+
+- Inspect `git status --short --branch` before editing.
+- If existing user changes are present, identify them and do not overwrite them.
+- Read the relevant files before proposing or applying edits.
+- Do not assume generated files, lockfiles, release assets, or `update.json` should change unless the task requires it.
+
+## Stop And Ask
+
+Stop and ask the user before proceeding if:
+
+- A task would change app identity, bundle identifier, updater endpoint, signing keys, release owner, or release repository.
+- The intended target is ambiguous between `origin` and `upstream`.
+- A DB or settings migration may overwrite, replace, or delete an existing An0Mas DB.
+- A release asset, updater signature, Git tag, GitHub Release, or `update.json` value does not match the expected version.
+- The task would publish assets, update `update.json`, mark a GitHub Release as latest, or otherwise expose an update to users.
+- A signing key is missing, mismatched, or would require printing private key material.
 
 ## Standard Verification
 
