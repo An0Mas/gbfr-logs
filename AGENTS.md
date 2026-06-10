@@ -29,8 +29,8 @@ This file contains repository-specific instructions for Codex agents working on 
 - Use feature branches for code/config/doc changes; do not commit directly to `main` unless the user explicitly asks.
 - Use PRs for AI-authored code/config changes.
 - Keep generated build artifacts out of Git unless the repo already tracks them for that purpose.
-- Put temporary logs, scratch notes, and installation logs under `C:\AI_Work\.ai-work\codex-work\<YYYYMMDD>-<task>`, not in the repo.
-- Before changing release, updater, DB migration, hook/protocol, or parser behavior, check the existing code paths and `C:\Obsidian\codex-knowledge-vault\projects\gbfr-logs\gbfr-logs.md` when available.
+- Put temporary logs, scratch notes, and installation logs outside the repository in a local scratch/work directory.
+- Before changing release, updater, DB migration, hook/protocol, or parser behavior, check the existing code paths and repository documentation first.
 
 ## Before Editing
 
@@ -72,7 +72,7 @@ Use the smallest set that matches the change risk, and report skipped checks wit
 - Packaging:
   - Release candidates require signed `npx tauri build`.
 - Formatting:
-  - `npm run format-check` is used by CI, but on this Windows workspace it may report Prettier/line-ending noise even when `git diff --exit-code` is clean. Investigate before treating it as a code change.
+  - `npm run format-check` is used by CI, but on Windows worktrees it may report Prettier/line-ending noise even when `git diff --exit-code` is clean. Investigate before treating it as a code change.
 
 ## Version Management
 
