@@ -13,7 +13,7 @@ This file contains repository-specific instructions for Codex agents working on 
 
 ## Environment Assumptions
 
-- Primary development and release verification is done on Windows.
+- Primary development and release verification are done on Windows.
 - Paths in this document use Windows-style paths unless otherwise noted.
 - Release packaging, MSI install checks, updater checks, and AppData checks must be verified on Windows.
 
@@ -49,6 +49,12 @@ Stop and ask the user before proceeding if:
 - A release asset, updater signature, Git tag, GitHub Release, or `update.json` value does not match the expected version.
 - The task would publish assets, update `update.json`, mark a GitHub Release as latest, or otherwise expose an update to users.
 - A signing key is missing, mismatched, or would require printing private key material.
+
+## CI And GitHub Actions
+
+- Do not modify GitHub Actions workflows unless the task explicitly requires it.
+- If CI behavior changes, explain the expected impact on build, test, release, and updater workflows.
+- Do not add secrets, tokens, certificates, or signing material to workflow files.
 
 ## Standard Verification
 
