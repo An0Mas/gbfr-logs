@@ -17,6 +17,13 @@ This file contains repository-specific instructions for Codex agents working on 
 - Paths in this document use Windows-style paths unless otherwise noted.
 - Release packaging, MSI install checks, updater checks, and AppData checks must be verified on Windows.
 
+## Toolchain And Dependencies
+
+- Prefer repository-pinned and CI-pinned toolchains when they exist.
+- Use `npm ci` instead of `npm install` unless dependency updates are intended.
+- Do not update Node, npm, Rust, Tauri, dependencies, or lockfiles unless the task requires it.
+- If local tool versions differ from CI or release expectations, mention that in the final report.
+
 ## Repo Identity
 
 - This fork ships as `GBFR Logs An0Mas`, side-by-side with upstream `GBFR Logs`.
@@ -33,11 +40,20 @@ This file contains repository-specific instructions for Codex agents working on 
 - Put temporary logs, scratch notes, and installation logs outside the repository in a local scratch/work directory.
 - Before changing release, updater, DB migration, hook/protocol, or parser behavior, check the existing code paths and repository documentation first.
 
+## Initial Triage
+
+Before making changes:
+
+- Run `git status --short --branch`.
+- Run `git remote -v` when branch targets, PRs, releases, updater URLs, or upstream sync are involved.
+- Confirm `origin` points to `An0Mas/gbfr-logs` before pushing or creating PRs.
+- Identify the task risk level from this document and choose the verification plan before editing.
+- Read the relevant nearby code and docs before applying edits.
+- If required verification cannot run because of environment limits, capture the exact blocker before substituting checks.
+
 ## Before Editing
 
-- Inspect `git status --short --branch` before editing.
 - If existing user changes are present, identify them and do not overwrite them.
-- Read the relevant files before proposing or applying edits.
 - Do not assume generated files, lockfiles, release assets, or `update.json` should change unless the task requires it.
 
 ## Stop And Ask
@@ -90,6 +106,16 @@ Use the smallest set that matches the change risk, and report skipped checks wit
   - Release candidates require signed `npx tauri build`.
 - Formatting:
   - `npm run format-check` is used by CI, but on Windows worktrees it may report Prettier/line-ending noise even when `git diff --exit-code` is clean. Investigate before treating it as a code change.
+
+## Verification Failure Handling
+
+- Do not ignore failed verification commands or replace them with easier checks.
+- First record the exact command, failure summary, and whether it looks like a code issue, environment issue, known repository issue, or transient failure.
+- Narrow diagnosis is allowed: check the working directory, tool availability, tool versions, PATH, file locks, relevant logs, and known repository notes.
+- If the failure is in the task scope, make the smallest relevant fix and rerun the same failing command.
+- If the failure appears environment-related, report the blocker and ask before installing tools, changing PATH, updating toolchains, or changing project files.
+- Ask before broad fixes such as dependency updates, lockfile rewrites, mass formatting, CI workflow changes, test weakening, lint suppression, or release/updater/DB behavior changes.
+- If a fallback or skipped check is unavoidable, label it as a fallback, explain why the standard check failed, and state what should be rerun before merge or release.
 
 ## Version Management
 
