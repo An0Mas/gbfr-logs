@@ -17,12 +17,31 @@ This file contains repository-specific instructions for Codex agents working on 
 - Paths in this document use Windows-style paths unless otherwise noted.
 - Release packaging, MSI install checks, updater checks, and AppData checks must be verified on Windows.
 
+## Toolchain And Dependencies
+
+- Prefer repository-pinned and CI-pinned toolchains when they exist.
+- CI currently uses Node 20 and Rust nightly; mention deviations in the final report.
+- Use `npm ci` instead of `npm install` unless dependency updates are intended.
+- Do not update Node, npm, Rust, Tauri, dependencies, or lockfiles unless the task requires it.
+- If local tool versions differ from CI or release expectations, mention that in the final report.
+
 ## Repo Identity
 
 - This fork ships as `GBFR Logs An0Mas`, side-by-side with upstream `GBFR Logs`.
 - Keep the Tauri bundle identifier as `com.an0mas.gbfr-logs` unless the user explicitly requests another app identity.
 - Do not switch updater endpoints, README release links, or release assets back to `false-spring/gbfr-logs` unless the task is explicitly about upstream sync.
 - README and other user-facing release/install text may contain upstream-oriented links; verify intended target before editing.
+
+## Project Map
+
+- Frontend UI: `src/`
+- Tauri desktop app, database, and parser: `src-tauri/`
+- Game hook: `src-hook/`
+- Shared event protocol: `protocol/`
+- Updater configuration: `src-tauri/tauri.conf.json` and `update.json`
+- Version files: `package.json`, `package-lock.json`, `src-tauri/Cargo.toml`, `src-tauri/tauri.conf.json`, and `Cargo.lock`
+- CI workflow: `.github/workflows/ci.yaml`
+- Release bundles: `target\release\bundle\msi` or the MSI bundle path printed by the Tauri build
 
 ## Work And Git Flow
 
@@ -33,16 +52,27 @@ This file contains repository-specific instructions for Codex agents working on 
 - Put temporary logs, scratch notes, and installation logs outside the repository in a local scratch/work directory.
 - Before changing release, updater, DB migration, hook/protocol, or parser behavior, check the existing code paths and repository documentation first.
 
+## Initial Triage
+
+Before making changes:
+
+- Run `git status --short --branch`.
+- Run `git remote -v` when branch targets, PRs, releases, updater URLs, or upstream sync are involved.
+- Confirm `origin` points to `An0Mas/gbfr-logs` before pushing or creating PRs.
+- Identify the task risk level from this document and choose the verification plan before editing.
+- Read the relevant nearby code and docs before applying edits.
+- If required verification cannot run because of environment limits, capture the exact blocker before substituting checks.
+
 ## Before Editing
 
-- Inspect `git status --short --branch` before editing.
 - If existing user changes are present, identify them and do not overwrite them.
-- Read the relevant files before proposing or applying edits.
 - Do not assume generated files, lockfiles, release assets, or `update.json` should change unless the task requires it.
 
 ## Stop And Ask
 
 Stop and ask the user before proceeding if:
+
+- A listed risk may apply and read-only inspection cannot resolve it without publishing, destructive changes, or secret exposure.
 
 - A task would change app identity, bundle identifier, updater endpoint, signing keys, release owner, or release repository.
 - The intended target is ambiguous between `origin` and `upstream`.
@@ -59,11 +89,14 @@ Stop and ask the user before proceeding if:
 
 ## Task Risk Levels
 
-- Docs-only: read relevant docs, edit minimal files, and skip app build/test unless generated docs or checked examples are affected.
-- Frontend UI: run `npm run tsc`, `npm run lint`, and `npm run build`.
-- Parser/protocol/hook: run `cargo check --verbose`, `cargo test --verbose`, and relevant hook/protocol builds.
-- DB migration: verify backup behavior, migration execution, and import/replace behavior with manual notes or tests.
-- Release/updater: follow the Release Checklist exactly and do not publish without explicit user approval.
+| Change type | Must run | Optional or conditional | Must report |
+| --- | --- | --- | --- |
+| Docs-only | Read the relevant docs and edit minimal files | App build/test only if generated docs or checked examples are affected | Skipped checks and why they are safe to skip |
+| Frontend UI | `npm run tsc`, `npm run lint`, `npm run build` | `npx vitest run`; screenshots or manual UI notes when behavior changes | UI impact and skipped test rationale |
+| Parser/protocol/hook | `cargo check --verbose`, `cargo test --verbose`, relevant hook/protocol builds | Sample log or game capture replay when available | Parser/protocol compatibility and persisted log impact |
+| DB migration/settings import | Backup behavior, migration execution, and import/replace behavior | Manual Settings flow notes when UI is involved | Data loss risk, backup path, and fallback path |
+| Release/updater | Release Checklist and signed `npx tauri build` | Updater check from an installed older An0Mas build when practical | `update.json`, asset upload, signature, install, and updater status |
+| CI/GitHub Actions | Affected local checks and workflow diff review | CI dry-run or GitHub Actions log review when available | Expected build, test, release, and updater workflow impact |
 
 ## Implementation Style
 
@@ -90,6 +123,16 @@ Use the smallest set that matches the change risk, and report skipped checks wit
   - Release candidates require signed `npx tauri build`.
 - Formatting:
   - `npm run format-check` is used by CI, but on Windows worktrees it may report Prettier/line-ending noise even when `git diff --exit-code` is clean. Investigate before treating it as a code change.
+
+## Verification Failure Handling
+
+- Do not ignore failed verification commands or replace them with easier checks.
+- First record the exact command, failure summary, and whether it looks like a code issue, environment issue, known repository issue, or transient failure.
+- Narrow diagnosis is allowed: check the working directory, tool availability, tool versions, PATH, file locks, relevant logs, and known repository notes.
+- If the failure is in the task scope, make the smallest relevant fix and rerun the same failing command.
+- If the failure appears environment-related, report the blocker and ask before installing tools, changing PATH, updating toolchains, or changing project files.
+- Ask before broad fixes such as dependency updates, lockfile rewrites, mass formatting, CI workflow changes, test weakening, lint suppression, or release/updater/DB behavior changes.
+- If a fallback or skipped check is unavoidable, label it as a fallback, explain why the standard check failed, and state what should be rerun before merge or release.
 
 ## Version Management
 
@@ -131,7 +174,7 @@ Use this order for An0Mas releases:
 2. Confirm version files are synchronized.
 3. Run required verification for the touched areas.
 4. Run signed `npx tauri build`.
-5. Confirm generated MSI, updater zip, and signature exist under `target\release\bundle\msi`.
+5. Confirm generated MSI, updater zip, and signature exist under the MSI bundle path printed by `npx tauri build`, currently `target\release\bundle\msi`.
 6. Install the MSI locally before publishing.
 7. Confirm Windows shows upstream `GBFR Logs` and `GBFR Logs An0Mas` as separate apps.
 8. Confirm install locations are separate:
@@ -161,6 +204,17 @@ Use this order for An0Mas releases:
 - First compare upstream `false-spring/gbfr-logs` and any known reverse-engineering references before inventing new protocol behavior.
 - Prefer preserving existing protocol/event shapes when new data can be represented without breaking stored logs.
 - If parser or protocol changes affect persisted logs, add or update DB migrations and include migration verification.
+
+## Definition Of Done
+
+A task is not complete until:
+
+- Relevant files and docs were inspected before editing.
+- The chosen task risk level was followed.
+- The diff was reviewed and unrelated file changes were avoided.
+- Required verification ran, or skipped checks were reported with exact reasons and remaining risk.
+- Release, updater, DB, migration, and app identity impact was stated when relevant.
+- No secrets, signing material, generated release artifacts, or unrelated build outputs were added.
 
 ## Reporting
 
