@@ -94,14 +94,14 @@ Stop and ask the user before proceeding if:
 
 ## Task Risk Levels
 
-| Change type | Must run | Optional or conditional | Must report |
-| --- | --- | --- | --- |
-| Docs-only | Read the relevant docs and edit minimal files | App build/test only if generated docs or checked examples are affected | Skipped checks and why they are safe to skip |
-| Frontend UI | Frontend checks in `docs/agents/verification.md` | `npx vitest run`; screenshots or manual UI notes when behavior changes | UI impact and skipped test rationale |
-| Parser/protocol/hook | `docs/agents/game-hook-porting.md` and Rust checks in `docs/agents/verification.md` | Sample log or game capture replay when available | Parser/protocol compatibility and persisted log impact |
-| DB migration/settings import | `docs/agents/db-and-settings-migration.md` | Manual Settings flow notes when UI is involved | Data loss risk, backup path, and fallback path |
-| Release/updater | `docs/agents/release-and-updater.md` | Updater check from an installed older An0Mas build when practical | `update.json`, asset upload, signature, install, and updater status |
-| CI/GitHub Actions | `docs/agents/verification.md` and workflow diff review | CI dry-run or GitHub Actions log review when available | Expected build, test, release, and updater workflow impact |
+| Change type                  | Must run                                                                            | Optional or conditional                                                | Must report                                                         |
+| ---------------------------- | ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Docs-only                    | Read the relevant docs and edit minimal files                                       | App build/test only if generated docs or checked examples are affected | Skipped checks and why they are safe to skip                        |
+| Frontend UI                  | Frontend checks in `docs/agents/verification.md`                                    | `npx vitest run`; screenshots or manual UI notes when behavior changes | UI impact and skipped test rationale                                |
+| Parser/protocol/hook         | `docs/agents/game-hook-porting.md` and Rust checks in `docs/agents/verification.md` | Sample log or game capture replay when available                       | Parser/protocol compatibility and persisted log impact              |
+| DB migration/settings import | `docs/agents/db-and-settings-migration.md`                                          | Manual Settings flow notes when UI is involved                         | Data loss risk, backup path, and fallback path                      |
+| Release/updater              | `docs/agents/release-and-updater.md`                                                | Updater check from an installed older An0Mas build when practical      | `update.json`, asset upload, signature, install, and updater status |
+| CI/GitHub Actions            | `docs/agents/verification.md` and workflow diff review                              | CI dry-run or GitHub Actions log review when available                 | Expected build, test, release, and updater workflow impact          |
 
 ## Implementation Style
 
