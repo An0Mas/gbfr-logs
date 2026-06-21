@@ -20,7 +20,7 @@ This file contains repository-specific instructions for Codex agents working on 
 ## Toolchain And Dependencies
 
 - Prefer repository-pinned and CI-pinned toolchains when they exist.
-- CI currently uses Node 20 and Rust nightly; mention deviations in the final report.
+- CI currently uses Node 20 and rolling Rust nightly; repo-local Rust is pinned in `rust-toolchain.toml`.
 - Use `npm ci` instead of `npm install` unless dependency updates are intended.
 - Do not update Node, npm, Rust, Tauri, dependencies, or lockfiles unless the task requires it.
 - If local tool versions differ from CI or release expectations, mention that in the final report.
@@ -71,8 +71,6 @@ Before making changes:
 ## Stop And Ask
 
 Stop and ask the user before proceeding if:
-
-- A listed risk may apply and read-only inspection cannot resolve it without publishing, destructive changes, or secret exposure.
 
 - A task would change app identity, bundle identifier, updater endpoint, signing keys, release owner, or release repository.
 - The intended target is ambiguous between `origin` and `upstream`.
@@ -170,7 +168,7 @@ Before release, confirm:
 
 Use this order for An0Mas releases:
 
-1. Start from clean `main` matching `origin/main`.
+1. Run `git fetch origin`, then start from clean `main` matching `origin/main`.
 2. Confirm version files are synchronized.
 3. Run required verification for the touched areas.
 4. Run signed `npx tauri build`.
