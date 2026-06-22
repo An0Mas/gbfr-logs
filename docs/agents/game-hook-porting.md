@@ -27,5 +27,8 @@ Game update work usually touches:
 
 - Run `cargo check --verbose` and `cargo test --verbose` for parser, protocol, or hook changes.
 - For hook changes, include relevant hook/protocol builds such as `cargo build --release --package hook` and `cargo build --verbose`.
+- Do not claim hook offset or game-version compatibility from compile success alone.
 - Use sample log or game capture replay when available.
+- Report the game version/build, sample log, or capture source used for hook verification.
+- If runtime/game verification was unavailable, state that hook behavior is not fully verified.
 - Report parser/protocol compatibility and persisted log impact.

@@ -16,6 +16,10 @@ Do not update `update.json` as part of the normal version bump. Update it only a
 
 Prefer separating version-bump changes from publish, asset upload, and `update.json` changes unless the user explicitly requests a full release.
 
+Do not rewrite, delete, or force-update release tags unless the user explicitly asks for that exact operation.
+
+Before changing `update.json`, record the previous values so the update can be rolled back if verification fails.
+
 Before release, confirm:
 
 - `package.json` version equals `src-tauri/Cargo.toml` version.
@@ -23,6 +27,7 @@ Before release, confirm:
 - `Cargo.lock` contains the same `gbfr-logs` package version.
 - Git tag, GitHub Release tag, asset names, and `update.json` version all refer to the same release.
 - `update.json` URL exactly matches the uploaded updater zip asset name.
+- `update.json` shape, pub date, and timestamp format match the updater configuration.
 
 ## Tauri Updater And Signing
 
@@ -36,6 +41,7 @@ Before release, confirm:
   - updater `.msi.zip.sig`
 - The `.sig` must correspond to the exact updater zip uploaded to the release.
 - If asset filenames are renamed during upload, update `update.json` with the actual GitHub asset URL, not the local path assumption.
+- Do not mark a GitHub Release as latest or publish a draft release until assets, signature, and `update.json` target are consistent.
 
 ## Release Checklist
 

@@ -65,6 +65,7 @@ This file contains repository-specific instructions for Codex agents working on 
 - If PR creation or push is unavailable, report the branch, commit, diff summary, and blocker instead of changing the merge strategy.
 - Keep generated build artifacts out of Git unless the repo already tracks them for that purpose.
 - Put temporary logs, scratch notes, and installation logs outside the repository in a local scratch/work directory.
+- Do not commit or document personal absolute paths, private workspace locations, or machine-specific scratch directories.
 - Before changing release, updater, DB migration, hook/protocol, or parser behavior, check the existing code paths and repository documentation first.
 
 ## Initial Triage
@@ -91,9 +92,9 @@ Stop and ask the user before proceeding if:
 - A task would change app identity, bundle identifier, updater endpoint, signing keys, release owner, or release repository.
 - Before editing, pushing, publishing, or creating PRs, the intended target is ambiguous between `origin` and `upstream`.
 - A DB or settings migration may overwrite, replace, or delete an existing An0Mas DB.
-- A release asset, updater signature, Git tag, GitHub Release, or `update.json` value does not match the expected version.
+- A release asset, updater signature, Git tag, GitHub Release, or `update.json` mismatch has been investigated, and the next step would correct, upload, publish, or expose an update to users.
 - The task would publish assets, update `update.json`, mark a GitHub Release as latest, or otherwise expose an update to users.
-- A signing key is missing, mismatched, or would require printing private key material.
+- The current task requires signing and a signing key is missing, mismatched, or would require printing private key material.
 
 ## CI And GitHub Actions
 
@@ -103,14 +104,14 @@ Stop and ask the user before proceeding if:
 
 ## Task Risk Levels
 
-| Change type                  | Must run                                                                                  | Optional or conditional                                                | Must report                                                         |
-| ---------------------------- | ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| Docs-only                    | Read the relevant docs and edit minimal files                                             | App build/test only if generated docs or checked examples are affected | Skipped checks and why they are safe to skip                        |
-| Frontend UI                  | `docs/agents/verification.md`; normally `npm run tsc`, `npm run lint`, `npm run build`    | `npx vitest run`; screenshots or manual UI notes when behavior changes | UI impact and skipped test rationale                                |
-| Parser/protocol/hook         | `docs/agents/game-hook-porting.md`; Rust checks from `docs/agents/verification.md`        | Sample log or game capture replay when available                       | Parser/protocol compatibility and persisted log impact              |
-| DB migration/settings import | `docs/agents/db-and-settings-migration.md`; migration/import behavior check when possible | Manual Settings flow notes when UI is involved                         | Data loss risk, backup path, and fallback path                      |
-| Release/updater              | `docs/agents/release-and-updater.md`                                                      | Updater check from an installed older An0Mas build when practical      | `update.json`, asset upload, signature, install, and updater status |
-| CI/GitHub Actions            | `docs/agents/verification.md` and workflow diff review                                    | CI dry-run or GitHub Actions log review when available                 | Expected build, test, release, and updater workflow impact          |
+| Change type                  | Must run                                                                                                                                            | Optional or conditional                                                | Must report                                                         |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Docs-only                    | Read the relevant docs and edit minimal files                                                                                                       | App build/test only if generated docs or checked examples are affected | Skipped checks and why they are safe to skip                        |
+| Frontend UI                  | `docs/agents/verification.md`; normally `npm run tsc`, `npm run lint`, `npm run build`                                                              | `npx vitest run`; screenshots or manual UI notes when behavior changes | UI impact and skipped test rationale                                |
+| Parser/protocol/hook         | `docs/agents/game-hook-porting.md`; Rust checks; no compile-only runtime compatibility claims                                                       | Sample log or game capture replay when available                       | Parser/protocol compatibility and persisted log impact              |
+| DB migration/settings import | `docs/agents/db-and-settings-migration.md`; inspect DB path/import/replacement; verify backup-before-replace and affected migration/import behavior | Manual Settings flow notes when UI is involved                         | Data loss risk, backup path, and fallback path                      |
+| Release/updater              | `docs/agents/release-and-updater.md`; verify version sync, `update.json` status, and signed build outputs when applicable                           | Updater check from an installed older An0Mas build when practical      | `update.json`, asset upload, signature, install, and updater status |
+| CI/GitHub Actions            | `docs/agents/verification.md` and workflow diff review                                                                                              | CI dry-run or GitHub Actions log review when available                 | Expected build, test, release, and updater workflow impact          |
 
 ## Implementation Style
 
