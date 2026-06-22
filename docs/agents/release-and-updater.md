@@ -14,6 +14,8 @@ When changing the app version, keep these files in sync:
 
 Do not update `update.json` as part of the normal version bump. Update it only after the GitHub Release asset URL and updater signature are final.
 
+Because the updater endpoint reads `update.json` from `main`, do not merge or push `update.json` changes to `main` until release assets and signatures are final and the update is intended to be visible to users.
+
 Prefer separating version-bump changes from publish, asset upload, and `update.json` changes unless the user explicitly requests a full release.
 
 Do not rewrite, delete, or force-update release tags unless the user explicitly asks for that exact operation.
@@ -40,6 +42,7 @@ Before release, confirm:
   - updater `.msi.zip`
   - updater `.msi.zip.sig`
 - The `.sig` must correspond to the exact updater zip uploaded to the release.
+- When copying the signature into `update.json`, use the signature generated for the exact updater zip uploaded to the release.
 - If asset filenames are renamed during upload, update `update.json` with the actual GitHub asset URL, not the local path assumption.
 - Do not mark a GitHub Release as latest or publish a draft release until assets, signature, and `update.json` target are consistent.
 
@@ -63,7 +66,8 @@ Use this order for An0Mas releases:
 12. Create or update the GitHub Release on `An0Mas/gbfr-logs`.
 13. Upload MSI, updater zip, and signature.
 14. Only after assets are uploaded, update `update.json` with the new version, pub date, signature, and final updater zip URL.
-15. Verify updater behavior from an installed older An0Mas build when practical.
+15. Merge or push `update.json` to `main` only when the update is intended to be visible to users.
+16. Verify updater behavior from an installed older An0Mas build when practical.
 
 ## Reporting
 
