@@ -17,12 +17,20 @@ This file contains repository-specific instructions for Codex agents working on 
 - Paths in this document use Windows-style paths unless otherwise noted.
 - Release packaging, MSI install checks, updater checks, and AppData checks must be verified on Windows.
 
+## Environment-Limited Work
+
+- If the agent is not running on Windows, do not claim Windows-only verification was completed.
+- Run platform-independent checks where possible, and report Windows-only checks as skipped with exact reasons.
+- Do not install toolchains, rewrite lockfiles, or change project configuration to bypass environment limits without user approval.
+- Release, updater, MSI install, and AppData behavior need final Windows verification before merge or publish.
+
 ## Toolchain And Dependencies
 
 - Prefer repository-pinned and CI-pinned toolchains when they exist.
-- CI currently uses Node 20 and rolling Rust nightly; repo-local Rust is pinned in `rust-toolchain.toml`.
+- CI currently uses Node 20. The Rust CI job installs current nightly, while repo-local cargo commands are expected to respect `rust-toolchain.toml`.
 - Use `npm ci` instead of `npm install` unless dependency updates are intended.
 - Do not update Node, npm, Rust, Tauri, dependencies, or lockfiles unless the task requires it.
+- Do not rewrite lockfiles as a side effect of local tooling differences.
 - If local tool versions differ from CI or release expectations, mention that in the final report.
 
 ## Repo Identity
@@ -63,6 +71,7 @@ This file contains repository-specific instructions for Codex agents working on 
 
 Before making changes:
 
+- For read-only review tasks, inspect the requested files first; `git status` is required before editing.
 - Run `git status --short --branch`.
 - Run `git remote -v` when branch targets, PRs, releases, updater URLs, or upstream sync are involved.
 - Confirm `origin` points to `An0Mas/gbfr-logs` before pushing or creating PRs.
@@ -80,7 +89,7 @@ Before making changes:
 Stop and ask the user before proceeding if:
 
 - A task would change app identity, bundle identifier, updater endpoint, signing keys, release owner, or release repository.
-- The intended target is ambiguous between `origin` and `upstream`.
+- Before editing, pushing, publishing, or creating PRs, the intended target is ambiguous between `origin` and `upstream`.
 - A DB or settings migration may overwrite, replace, or delete an existing An0Mas DB.
 - A release asset, updater signature, Git tag, GitHub Release, or `update.json` value does not match the expected version.
 - The task would publish assets, update `update.json`, mark a GitHub Release as latest, or otherwise expose an update to users.
@@ -94,14 +103,14 @@ Stop and ask the user before proceeding if:
 
 ## Task Risk Levels
 
-| Change type                  | Must run                                                                            | Optional or conditional                                                | Must report                                                         |
-| ---------------------------- | ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| Docs-only                    | Read the relevant docs and edit minimal files                                       | App build/test only if generated docs or checked examples are affected | Skipped checks and why they are safe to skip                        |
-| Frontend UI                  | Frontend checks in `docs/agents/verification.md`                                    | `npx vitest run`; screenshots or manual UI notes when behavior changes | UI impact and skipped test rationale                                |
-| Parser/protocol/hook         | `docs/agents/game-hook-porting.md` and Rust checks in `docs/agents/verification.md` | Sample log or game capture replay when available                       | Parser/protocol compatibility and persisted log impact              |
-| DB migration/settings import | `docs/agents/db-and-settings-migration.md`                                          | Manual Settings flow notes when UI is involved                         | Data loss risk, backup path, and fallback path                      |
-| Release/updater              | `docs/agents/release-and-updater.md`                                                | Updater check from an installed older An0Mas build when practical      | `update.json`, asset upload, signature, install, and updater status |
-| CI/GitHub Actions            | `docs/agents/verification.md` and workflow diff review                              | CI dry-run or GitHub Actions log review when available                 | Expected build, test, release, and updater workflow impact          |
+| Change type                  | Must run                                                                                  | Optional or conditional                                                | Must report                                                         |
+| ---------------------------- | ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Docs-only                    | Read the relevant docs and edit minimal files                                             | App build/test only if generated docs or checked examples are affected | Skipped checks and why they are safe to skip                        |
+| Frontend UI                  | `docs/agents/verification.md`; normally `npm run tsc`, `npm run lint`, `npm run build`    | `npx vitest run`; screenshots or manual UI notes when behavior changes | UI impact and skipped test rationale                                |
+| Parser/protocol/hook         | `docs/agents/game-hook-porting.md`; Rust checks from `docs/agents/verification.md`        | Sample log or game capture replay when available                       | Parser/protocol compatibility and persisted log impact              |
+| DB migration/settings import | `docs/agents/db-and-settings-migration.md`; migration/import behavior check when possible | Manual Settings flow notes when UI is involved                         | Data loss risk, backup path, and fallback path                      |
+| Release/updater              | `docs/agents/release-and-updater.md`                                                      | Updater check from an installed older An0Mas build when practical      | `update.json`, asset upload, signature, install, and updater status |
+| CI/GitHub Actions            | `docs/agents/verification.md` and workflow diff review                                    | CI dry-run or GitHub Actions log review when available                 | Expected build, test, release, and updater workflow impact          |
 
 ## Implementation Style
 

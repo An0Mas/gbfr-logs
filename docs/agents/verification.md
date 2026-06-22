@@ -31,6 +31,13 @@ Formatting:
 - `npm run format-check` is used by CI.
 - On Windows worktrees it may report Prettier or line-ending noise even when `git diff --exit-code` is clean. Investigate before treating it as a code change.
 
+## Environment-Limited Work
+
+- If required checks cannot be completed in the current environment, run the closest safe checks that do not require changing tools, dependencies, or project configuration.
+- Do not install toolchains, rewrite lockfiles, or change project configuration without user approval.
+- Clearly report each skipped check, the exact blocker, and the remaining risk.
+- Never describe skipped Windows-only release, MSI, updater, or AppData checks as verified.
+
 ## Verification Failure Handling
 
 - Do not ignore failed verification commands or replace them with easier checks.

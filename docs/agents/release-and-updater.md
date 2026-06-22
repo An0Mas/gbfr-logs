@@ -14,6 +14,8 @@ When changing the app version, keep these files in sync:
 
 Do not update `update.json` as part of the normal version bump. Update it only after the GitHub Release asset URL and updater signature are final.
 
+Prefer separating version-bump changes from publish, asset upload, and `update.json` changes unless the user explicitly requests a full release.
+
 Before release, confirm:
 
 - `package.json` version equals `src-tauri/Cargo.toml` version.
