@@ -8,6 +8,9 @@ const repoRoot = process.cwd();
 const defaultOwner = "An0Mas";
 const defaultRepo = "gbfr-logs";
 const platformKey = "windows-x86_64";
+const semverPattern =
+  /^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$/;
+const rfc3339Pattern = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(Z|[+-](\d{2}):(\d{2}))$/;
 
 function usage() {
   return `Usage: npm run check:release -- [--tag <tag>] [--owner <owner>] [--repo <repo>] [--update-json <path>]
@@ -69,6 +72,54 @@ function readJsonFile(relativePath) {
 
 function isNonEmptyString(value) {
   return typeof value === "string" && value.trim() !== "";
+}
+
+function isTauriSemVer(value) {
+  return semverPattern.test(value);
+}
+
+function isRfc3339DateTime(value) {
+  const match = value.match(rfc3339Pattern);
+  if (!match) {
+    return false;
+  }
+
+  const [
+    ,
+    yearText,
+    monthText,
+    dayText,
+    hourText,
+    minuteText,
+    secondText,
+    offsetText,
+    offsetHourText,
+    offsetMinuteText,
+  ] = match;
+  const year = Number(yearText);
+  const month = Number(monthText);
+  const day = Number(dayText);
+  const hour = Number(hourText);
+  const minute = Number(minuteText);
+  const second = Number(secondText);
+
+  if (month < 1 || month > 12 || day < 1 || day > daysInMonth(year, month)) {
+    return false;
+  }
+
+  if (hour > 23 || minute > 59 || second > 59) {
+    return false;
+  }
+
+  if (offsetText !== "Z" && (Number(offsetHourText) > 23 || Number(offsetMinuteText) > 59)) {
+    return false;
+  }
+
+  return true;
+}
+
+function daysInMonth(year, month) {
+  return new Date(Date.UTC(year, month, 0)).getUTCDate();
 }
 
 function parseReleaseDownloadUrl(value) {
@@ -139,6 +190,8 @@ export function validateReleaseUpdate({
 
   if (!isNonEmptyString(version)) {
     problems.push("update.json version is missing");
+  } else if (!isTauriSemVer(version)) {
+    problems.push(`update.json version ${version} must be valid SemVer with an optional leading v`);
   }
 
   if (!isNonEmptyString(tag)) {
@@ -147,8 +200,10 @@ export function validateReleaseUpdate({
     problems.push(`update.json version ${version} does not match expected tag ${tag}`);
   }
 
-  if (!isNonEmptyString(updateJson?.pub_date) || Number.isNaN(Date.parse(updateJson.pub_date))) {
-    problems.push("update.json pub_date is missing or invalid");
+  if (!isNonEmptyString(updateJson?.pub_date)) {
+    problems.push("update.json pub_date is missing");
+  } else if (!isRfc3339DateTime(updateJson.pub_date)) {
+    problems.push("update.json pub_date must be RFC3339 when present");
   }
 
   if (!platform) {

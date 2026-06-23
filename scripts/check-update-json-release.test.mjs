@@ -87,4 +87,37 @@ describe("validateReleaseUpdate", () => {
 
     expect(problems).toContain("update.json signature does not match the .sig release asset");
   });
+
+  it("rejects an update.json version that is not valid SemVer", () => {
+    const problems = validate({
+      expectedTag: "release-candidate",
+      updateJson: {
+        ...updateJson,
+        version: "release-candidate",
+        platforms: {
+          "windows-x86_64": {
+            ...updateJson.platforms["windows-x86_64"],
+            url: "https://github.com/An0Mas/gbfr-logs/releases/download/release-candidate/GBFR.Logs_1.8.1_x64_en-US.msi.zip",
+          },
+        },
+      },
+      release: {
+        ...release,
+        tag_name: "release-candidate",
+      },
+    });
+
+    expect(problems).toContain("update.json version release-candidate must be valid SemVer with an optional leading v");
+  });
+
+  it("rejects a pub_date that is parseable but not RFC3339", () => {
+    const problems = validate({
+      updateJson: {
+        ...updateJson,
+        pub_date: "June 23, 2026",
+      },
+    });
+
+    expect(problems).toContain("update.json pub_date must be RFC3339 when present");
+  });
 });
