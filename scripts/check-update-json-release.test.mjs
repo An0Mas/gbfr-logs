@@ -120,4 +120,23 @@ describe("validateReleaseUpdate", () => {
 
     expect(problems).toContain("update.json pub_date must be RFC3339 when present");
   });
+
+  it("rejects platform stanzas that are not supported by this release check", () => {
+    const problems = validate({
+      updateJson: {
+        ...updateJson,
+        platforms: {
+          ...updateJson.platforms,
+          "linux-x86_64": {
+            signature: "stale-signature",
+            url: "https://github.com/An0Mas/gbfr-logs/releases/download/1.8.1/stale.AppImage.tar.gz",
+          },
+        },
+      },
+    });
+
+    expect(problems).toContain(
+      "update.json contains unsupported platform linux-x86_64; only windows-x86_64 is supported"
+    );
+  });
 });

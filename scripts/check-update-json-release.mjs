@@ -8,6 +8,7 @@ const repoRoot = process.cwd();
 const defaultOwner = "An0Mas";
 const defaultRepo = "gbfr-logs";
 const platformKey = "windows-x86_64";
+const supportedPlatformKeys = new Set([platformKey]);
 const semverPattern =
   /^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$/;
 const rfc3339Pattern = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(Z|[+-](\d{2}):(\d{2}))$/;
@@ -72,6 +73,10 @@ function readJsonFile(relativePath) {
 
 function isNonEmptyString(value) {
   return typeof value === "string" && value.trim() !== "";
+}
+
+function isObjectRecord(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
 function isTauriSemVer(value) {
@@ -184,7 +189,8 @@ export function validateReleaseUpdate({
   const problems = [];
   const version = updateJson?.version;
   const tag = expectedTag ?? version;
-  const platform = updateJson?.platforms?.[platformKey];
+  const platforms = updateJson?.platforms;
+  const platform = isObjectRecord(platforms) ? platforms[platformKey] : undefined;
   const signature = platform?.signature;
   const updaterUrl = platform?.url;
 
@@ -204,6 +210,16 @@ export function validateReleaseUpdate({
     problems.push("update.json pub_date is missing");
   } else if (!isRfc3339DateTime(updateJson.pub_date)) {
     problems.push("update.json pub_date must be RFC3339 when present");
+  }
+
+  if (!isObjectRecord(platforms)) {
+    problems.push("update.json platforms must be an object");
+  } else {
+    for (const key of Object.keys(platforms)) {
+      if (!supportedPlatformKeys.has(key)) {
+        problems.push(`update.json contains unsupported platform ${key}; only ${platformKey} is supported`);
+      }
+    }
   }
 
   if (!platform) {
