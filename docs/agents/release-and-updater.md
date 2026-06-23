@@ -27,6 +27,7 @@ Before release, confirm:
 - `package.json` version equals `src-tauri/Cargo.toml` version.
 - `src-tauri/tauri.conf.json` `package.version` equals the intended release version.
 - `Cargo.lock` contains the same `gbfr-logs` package version.
+- `npm run check:version` passes for version file synchronization.
 - Git tag, GitHub Release tag, asset names, and `update.json` version all refer to the same release.
 - `update.json` URL exactly matches the uploaded updater zip asset name.
 - `update.json` shape, pub date, and timestamp format match the updater configuration.
