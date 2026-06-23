@@ -31,6 +31,7 @@ Before release, confirm:
 - Git tag, GitHub Release tag, asset names, and `update.json` version all refer to the same release.
 - `update.json` URL exactly matches the uploaded updater zip asset name.
 - `update.json` shape, pub date, and timestamp format match the updater configuration.
+- After uploading release assets and updating `update.json`, `npm run check:release -- --tag <version>` passes against the target GitHub Release.
 
 ## Tauri Updater And Signing
 
@@ -67,8 +68,9 @@ Use this order for An0Mas releases:
 12. Create or update the GitHub Release on `An0Mas/gbfr-logs`.
 13. Upload MSI, updater zip, and signature.
 14. Only after assets are uploaded, update `update.json` with the new version, pub date, signature, and final updater zip URL.
-15. Merge or push `update.json` to `main` only when the update is intended to be visible to users.
-16. Verify updater behavior from an installed older An0Mas build when practical.
+15. Run `npm run check:release -- --tag <version>` to confirm `update.json` matches the GitHub Release assets.
+16. Merge or push `update.json` to `main` only when the update is intended to be visible to users.
+17. Verify updater behavior from an installed older An0Mas build when practical.
 
 ## Reporting
 

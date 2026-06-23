@@ -12,6 +12,7 @@
     "format": "prettier --write --ignore-unknown --ext js,jsx,ts,tsx src ./src",
     "format-check": "prettier --check --ignore-unknown --ext js,jsx,ts,tsx src ./src",
     "check:version": "node scripts/check-version-sync.mjs",
+    "check:release": "node scripts/check-update-json-release.mjs",
     "tauri": "tauri",
     "test": "vitest"
   },
