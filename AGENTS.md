@@ -17,11 +17,20 @@ This file contains repository-specific instructions for Codex agents working on 
 - Paths in this document use Windows-style paths unless otherwise noted.
 - Release packaging, MSI install checks, updater checks, and AppData checks must be verified on Windows.
 
+## Environment-Limited Work
+
+- If the agent is not running on Windows, do not claim Windows-only verification was completed.
+- Run platform-independent checks where possible, and report Windows-only checks as skipped with exact reasons.
+- Do not install toolchains, rewrite lockfiles, or change project configuration to bypass environment limits without user approval.
+- Release, updater, MSI install, and AppData behavior need final Windows verification before merge or publish.
+
 ## Toolchain And Dependencies
 
 - Prefer repository-pinned and CI-pinned toolchains when they exist.
+- CI currently uses Node 20. The Rust CI job installs current nightly, while repo-local cargo commands are expected to respect `rust-toolchain.toml`.
 - Use `npm ci` instead of `npm install` unless dependency updates are intended.
 - Do not update Node, npm, Rust, Tauri, dependencies, or lockfiles unless the task requires it.
+- Do not rewrite lockfiles as a side effect of local tooling differences.
 - If local tool versions differ from CI or release expectations, mention that in the final report.
 
 ## Repo Identity
@@ -31,6 +40,24 @@ This file contains repository-specific instructions for Codex agents working on 
 - Do not switch updater endpoints, README release links, or release assets back to `false-spring/gbfr-logs` unless the task is explicitly about upstream sync.
 - README and other user-facing release/install text may contain upstream-oriented links; verify intended target before editing.
 
+## Project Map
+
+- Frontend UI: `src/`
+- Tauri desktop app, database, and parser: `src-tauri/`
+- Game hook: `src-hook/`
+- Shared event protocol: `protocol/`
+- Updater configuration: `src-tauri/tauri.conf.json` and `update.json`
+- Version files: `package.json`, `package-lock.json`, `src-tauri/Cargo.toml`, `src-tauri/tauri.conf.json`, and `Cargo.lock`
+- CI workflow: `.github/workflows/ci.yaml`
+- Release bundles: `target\release\bundle\msi` or the MSI bundle path printed by the Tauri build
+
+## Read When
+
+- Verification commands fail, checks are ambiguous, or CI behavior changes: read `docs/agents/verification.md`.
+- Version, release, updater, signing, release assets, or `update.json` are involved: read `docs/agents/release-and-updater.md` before editing.
+- DB paths, Settings import, migration, backup, replacement, or AppData behavior are involved: read `docs/agents/db-and-settings-migration.md` before editing.
+- Game updates, hook changes, protocol changes, parser changes, or persisted log compatibility are involved: read `docs/agents/game-hook-porting.md` before editing.
+
 ## Work And Git Flow
 
 - Use feature branches for code/config/doc changes; do not commit directly to `main` unless the user explicitly asks.
@@ -38,12 +65,14 @@ This file contains repository-specific instructions for Codex agents working on 
 - If PR creation or push is unavailable, report the branch, commit, diff summary, and blocker instead of changing the merge strategy.
 - Keep generated build artifacts out of Git unless the repo already tracks them for that purpose.
 - Put temporary logs, scratch notes, and installation logs outside the repository in a local scratch/work directory.
+- Do not commit or document personal absolute paths, private workspace locations, or machine-specific scratch directories.
 - Before changing release, updater, DB migration, hook/protocol, or parser behavior, check the existing code paths and repository documentation first.
 
 ## Initial Triage
 
 Before making changes:
 
+- For read-only review tasks, inspect the requested files first; `git status` is required before editing.
 - Run `git status --short --branch`.
 - Run `git remote -v` when branch targets, PRs, releases, updater URLs, or upstream sync are involved.
 - Confirm `origin` points to `An0Mas/gbfr-logs` before pushing or creating PRs.
@@ -61,11 +90,11 @@ Before making changes:
 Stop and ask the user before proceeding if:
 
 - A task would change app identity, bundle identifier, updater endpoint, signing keys, release owner, or release repository.
-- The intended target is ambiguous between `origin` and `upstream`.
+- Before editing, pushing, publishing, or creating PRs, the intended target is ambiguous between `origin` and `upstream`.
 - A DB or settings migration may overwrite, replace, or delete an existing An0Mas DB.
-- A release asset, updater signature, Git tag, GitHub Release, or `update.json` value does not match the expected version.
+- A release asset, updater signature, Git tag, GitHub Release, or `update.json` mismatch has been investigated, and the next step would correct, upload, publish, or expose an update to users.
 - The task would publish assets, update `update.json`, mark a GitHub Release as latest, or otherwise expose an update to users.
-- A signing key is missing, mismatched, or would require printing private key material.
+- The current task requires signing and a signing key is missing, mismatched, or would require printing private key material.
 
 ## CI And GitHub Actions
 
@@ -75,11 +104,15 @@ Stop and ask the user before proceeding if:
 
 ## Task Risk Levels
 
-- Docs-only: read relevant docs, edit minimal files, and skip app build/test unless generated docs or checked examples are affected.
-- Frontend UI: run `npm run tsc`, `npm run lint`, and `npm run build`.
-- Parser/protocol/hook: run `cargo check --verbose`, `cargo test --verbose`, and relevant hook/protocol builds.
-- DB migration: verify backup behavior, migration execution, and import/replace behavior with manual notes or tests.
-- Release/updater: follow the Release Checklist exactly and do not publish without explicit user approval.
+| Change type                  | Must run                                                                                                                                            | Optional or conditional                                                | Must report                                                         |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Docs-only                    | Read the relevant docs and edit minimal files                                                                                                       | App build/test only if generated docs or checked examples are affected | Skipped checks and why they are safe to skip                        |
+| Frontend UI                  | `docs/agents/verification.md`; normally `npm run tsc`, `npm run lint`, `npm run build`                                                              | `npx vitest run`; screenshots or manual UI notes when behavior changes | UI impact and skipped test rationale                                |
+| Parser/protocol/hook         | `docs/agents/game-hook-porting.md`; Rust checks; no compile-only runtime compatibility claims                                                       | Sample log or game capture replay when available                       | Parser/protocol compatibility and persisted log impact              |
+| DB migration/settings import | `docs/agents/db-and-settings-migration.md`; inspect DB path/import/replacement; verify backup-before-replace and affected migration/import behavior | Manual Settings flow notes when UI is involved                         | Data loss risk, backup path, and fallback path                      |
+| Version bump                 | `docs/agents/release-and-updater.md`; verify version file sync; confirm `update.json` is unchanged unless publishing is explicitly requested       | Full release checks only when packaging or publishing is in scope       | Version files touched and `update.json` changed/unchanged status    |
+| Release/publish/updater      | `docs/agents/release-and-updater.md`; signed build; verify MSI, updater zip, signature, final asset URL, and `update.json` status                  | Updater check from an installed older An0Mas build when practical      | `update.json`, asset upload, signature, install, and updater status |
+| CI/GitHub Actions            | `docs/agents/verification.md` and workflow diff review                                                                                              | CI dry-run or GitHub Actions log review when available                 | Expected build, test, release, and updater workflow impact          |
 
 ## Implementation Style
 
@@ -89,104 +122,16 @@ Stop and ask the user before proceeding if:
 - Do not add dependencies unless the user approves or the benefit is clearly justified.
 - For UI changes, keep behavior and wording consistent with existing components.
 
-## Standard Verification
+## Definition Of Done
 
-Use the smallest set that matches the change risk, and report skipped checks with reasons.
+A task is not complete until:
 
-- Frontend/type/lint:
-  - `npm run tsc`
-  - `npm run lint`
-  - `npm run build`
-- Tests:
-  - Prefer `npx vitest run` locally. `npm test` maps to `vitest` and can stay in watch mode.
-- Rust:
-  - `cargo check --verbose`
-  - For hook/protocol/parser changes: `cargo build --release --package hook`, `cargo build --verbose`, and `cargo test --verbose`
-- Packaging:
-  - Release candidates require signed `npx tauri build`.
-- Formatting:
-  - `npm run format-check` is used by CI, but on Windows worktrees it may report Prettier/line-ending noise even when `git diff --exit-code` is clean. Investigate before treating it as a code change.
-
-## Verification Failure Handling
-
-- Do not ignore failed verification commands or replace them with easier checks.
-- First record the exact command, failure summary, and whether it looks like a code issue, environment issue, known repository issue, or transient failure.
-- Narrow diagnosis is allowed: check the working directory, tool availability, tool versions, PATH, file locks, relevant logs, and known repository notes.
-- If the failure is in the task scope, make the smallest relevant fix and rerun the same failing command.
-- If the failure appears environment-related, report the blocker and ask before installing tools, changing PATH, updating toolchains, or changing project files.
-- Ask before broad fixes such as dependency updates, lockfile rewrites, mass formatting, CI workflow changes, test weakening, lint suppression, or release/updater/DB behavior changes.
-- If a fallback or skipped check is unavoidable, label it as a fallback, explain why the standard check failed, and state what should be rerun before merge or release.
-
-## Version Management
-
-When changing the app version, keep these files in sync:
-
-- `package.json`
-- `package-lock.json`
-- `src-tauri/Cargo.toml`
-- `src-tauri/tauri.conf.json`
-- `Cargo.lock` entry for the `gbfr-logs` package
-
-Do not update `update.json` as part of the normal version bump. Update it only after the GitHub Release asset URL and updater signature are final.
-
-Before release, confirm:
-
-- `package.json` version equals `src-tauri/Cargo.toml` version.
-- `src-tauri/tauri.conf.json` `package.version` equals the intended release version.
-- `Cargo.lock` contains the same `gbfr-logs` package version.
-- Git tag, GitHub Release tag, asset names, and `update.json` version all refer to the same release.
-- `update.json` URL exactly matches the uploaded updater zip asset name.
-
-## Tauri Updater And Signing
-
-- Updater endpoint must remain `https://raw.githubusercontent.com/An0Mas/gbfr-logs/main/update.json` for An0Mas releases.
-- The updater public key lives in `src-tauri/tauri.conf.json`.
-- The updater private key must not be committed or printed. If signing locally, load it only into the current process environment.
-- Release assets must include:
-  - MSI installer
-  - updater `.msi.zip`
-  - updater `.msi.zip.sig`
-- The `.sig` must correspond to the exact updater zip uploaded to the release.
-- If asset filenames are renamed during upload, update `update.json` with the actual GitHub asset URL, not the local path assumption.
-
-## Release Checklist
-
-Use this order for An0Mas releases:
-
-1. Start from clean `main` matching `origin/main`.
-2. Confirm version files are synchronized.
-3. Run required verification for the touched areas.
-4. Run signed `npx tauri build`.
-5. Confirm generated MSI, updater zip, and signature exist under `target\release\bundle\msi`.
-6. Install the MSI locally before publishing.
-7. Confirm Windows shows upstream `GBFR Logs` and `GBFR Logs An0Mas` as separate apps.
-8. Confirm install locations are separate:
-   - Upstream: `C:\Program Files\GBFR Logs\`
-   - An0Mas: `C:\Program Files\GBFR Logs An0Mas\`
-9. Launch `GBFR Logs An0Mas` once and confirm it creates `%APPDATA%\com.an0mas.gbfr-logs\logs.db`.
-10. Confirm upstream `C:\Program Files\GBFR Logs\logs.db` was not modified by An0Mas startup.
-11. Test Settings > Data Migration before publishing an update that changes DB/settings migration behavior.
-12. Create or update the GitHub Release on `An0Mas/gbfr-logs`.
-13. Upload MSI, updater zip, and signature.
-14. Only after assets are uploaded, update `update.json` with the new version, pub date, signature, and final updater zip URL.
-15. Verify updater behavior from an installed older An0Mas build when practical.
-
-## Database And Settings Migration
-
-- An0Mas DB path is `%APPDATA%\com.an0mas.gbfr-logs\logs.db`.
-- Upstream legacy DB may exist at `C:\Program Files\GBFR Logs\logs.db`.
-- Do not make An0Mas read/write the upstream DB directly as its live database.
-- Migration should be explicit from Settings and should copy data into the An0Mas DB.
-- Existing An0Mas DB imports should preserve a backup before replacement.
-- After DB import, migrations must run on the copied DB.
-- For settings migration, treat upstream WebView localStorage import as best effort and keep JSON export/import available as fallback.
-
-## New Game Or Patch Support
-
-- Game update work usually touches `src-hook`, `protocol`, `src-tauri/src/parser`, and UI/log display code.
-- First compare upstream `false-spring/gbfr-logs` and any known reverse-engineering references before inventing new protocol behavior.
-- Prefer preserving existing protocol/event shapes when new data can be represented without breaking stored logs.
-- If parser or protocol changes affect persisted logs, add or update DB migrations and include migration verification.
+- Relevant files and docs were inspected before editing.
+- The chosen task risk level was followed.
+- The diff was reviewed and unrelated file changes were avoided.
+- Required verification ran, or skipped checks were reported with exact reasons and remaining risk.
+- Release, updater, DB, migration, and app identity impact was stated when relevant.
+- No secrets, signing material, generated release artifacts, or unrelated build outputs were added.
 
 ## Reporting
 
