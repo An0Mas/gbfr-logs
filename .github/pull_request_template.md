@@ -17,6 +17,7 @@
 - [ ] I ran the required checks for the selected change type.
 - [ ] I reported skipped checks with reasons.
 - [ ] I ran `npm run check:version` if version files changed.
+- [ ] I ran `npm run check:release -- --tag <version>` if release assets or `update.json` changed.
 - [ ] Version files are synchronized, or no version files changed.
 - [ ] `update.json` is unchanged unless this PR intentionally publishes an update.
 
