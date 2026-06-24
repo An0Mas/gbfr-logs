@@ -1,11 +1,11 @@
 {
-  "version": "1.8.1",
-  "notes": "An0Mas fork updater bootstrap release. Please make sure to save and exit before updating.",
-  "pub_date": "2026-05-29T22:13:30+00:00",
+  "version": "1.8.2",
+  "notes": "GBFR Logs An0Mas side-by-side release. Please save and exit before updating.",
+  "pub_date": "2026-06-24T11:34:34Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTUFMzTHRkUEJGZHlWT2prWEhqbG5nYmh6QmxSUkZqbklhUUF6ZzJRcEJ1ZjMrVXlPSnBNbFJONzFSZytNYTlKSUp1UlF0SnBqdExvd1g0TEswR0t3VXpTLy9QVjFnc1FjPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzgwMDkyNzk1CWZpbGU6R0JGUiBMb2dzXzEuOC4xX3g2NF9lbi1VUy5tc2kuemlwCktFaU0wMS80OTY0YTE5TjAwcjZZZDVGRUhxTFZRRmxWVWFFZkprT3V6L2x3NGs5Qml5dE5ZbU93WlpQMk0yZENCRWNwL3BNeHBxc1RMSi9kcmRBR0NRPT0K",
-      "url": "https://github.com/An0Mas/gbfr-logs/releases/download/1.8.1/GBFR.Logs_1.8.1_x64_en-US.msi.zip"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTUFMzTHRkUEJGZDd2dzYzRFVCMDN0YVZNUjdwbEtFdlZidjBRZVYwYWdKZmtuc3RhRkJxK1Z0VkRoTlVic2lqMmVuMmZPY2trUE5XOTErUkpLN3VSZk1nd1pjcEhqQUFnPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzgyMzAwMTAwCWZpbGU6R0JGUiBMb2dzIEFuME1hc18xLjguMl94NjRfZW4tVVMubXNpLnppcApTZk9XNDA2cXQzK3FtM2ptZ0MvaGFWaEdmUDRpR21ZbHd4ekE1dHNTYVZqeUVSSFhRbjF6aVRDN2ZWbWhaWXdMcElJdk1LcFFhNGhWb3F6UE1DZ2xCZz09Cg==",
+      "url": "https://github.com/An0Mas/gbfr-logs/releases/download/1.8.2/GBFR.Logs.An0Mas_1.8.2_x64_en-US.msi.zip"
     }
   }
 }
