@@ -1,31 +1,56 @@
-# gbfr-logs
+# GBFR Logs An0Mas
 
-[![GitHub Release](https://img.shields.io/github/v/release/false-spring/gbfr-logs)](https://github.com/false-spring/gbfr-logs/releases)
-[![GitHub Downloads](https://img.shields.io/github/downloads/false-spring/gbfr-logs/total)](https://github.com/false-spring/gbfr-logs/releases)
+日本語 | [English](./README.en.md)
+
+[![GitHub Release](https://img.shields.io/github/v/release/An0Mas/gbfr-logs)](https://github.com/An0Mas/gbfr-logs/releases)
+[![GitHub Downloads](https://img.shields.io/github/downloads/An0Mas/gbfr-logs/total)](https://github.com/An0Mas/gbfr-logs/releases)
 [![Discord](https://img.shields.io/discord/1218833963032776774?style=flat&label=discord&color=7289da)](https://discord.gg/GR4r9zrqJj)
-[![GitHub License](https://img.shields.io/github/license/false-spring/gbfr-logs)](./LICENSE)
+[![GitHub License](https://img.shields.io/github/license/An0Mas/gbfr-logs)](./LICENSE)
 
-<a href="https://www.buymeacoffee.com/false.spring" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
+<a href="https://www.buymeacoffee.com/an0mas" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
 
-Overlay DPS parser/meter for Granblue Fantasy: Relink, based initially on the reverse engineering work from [naoouo/GBFR-ACT](https://github.com/nyaoouo/GBFR-ACT).
+`GBFR Logs An0Mas` は、Granblue Fantasy: Relink 向けのオーバーレイDPSメーター / ログビューアーです。
 
-## How to install
+このリポジトリは [false-spring/gbfr-logs](https://github.com/false-spring/gbfr-logs) の非公式forkです。An0Mas版は upstream 版の `GBFR Logs` とは別アプリとしてインストールされ、アプリ名、識別子、更新先、データ保存先を An0Mas fork 用に分離しています。
 
-- Go to [Releases](https://github.com/false-spring/gbfr-logs/releases)
-- Download the latest .msi installer and run it.
-- Open GBFR Logs after the game is already running.
+## 注意
 
-## Screenshots
+- 非公式forkのため、upstream 版と同じサポートや安定性は保証されません。
+- ゲームのアップデートにより、メーターが動かない、クラッシュする、ログの意味が変わる可能性があります。
+- An0Mas版の不具合は [An0Mas/gbfr-logs の Issues](https://github.com/An0Mas/gbfr-logs/issues) に報告してください。
+- upstream 版に関する情報は [false-spring/gbfr-logs](https://github.com/false-spring/gbfr-logs) を確認してください。
+
+## ダウンロード / インストール
+
+1. [An0Mas版のReleases](https://github.com/An0Mas/gbfr-logs/releases) を開きます。
+2. 最新リリースの `.msi` インストーラーをダウンロードして実行します。
+3. `.zip` と `.sig` はアップデーター検証用のファイルです。通常の手動インストールでは `.msi` を使ってください。
+4. ゲームを起動した後に `GBFR Logs An0Mas` を起動します。
+
+An0Mas版は `GBFR Logs An0Mas` としてインストールされます。upstream 版の `GBFR Logs` とは別アプリとして並存できます。
+
+## データ移行
+
+An0Mas版は upstream 版のデータベースを直接共有しません。既存のログや設定を移したい場合は、アプリ内の `Settings > Data Migration` を使って明示的にインポートしてください。
+
+- 検出された upstream 版の `logs.db` をインポートできます。
+- 任意の `logs.db` を手動選択してインポートできます。
+- upstream 版の WebView localStorage にあるメーター設定を、可能な範囲でインポートできます。
+- 設定JSONのエクスポート / インポートができます。
+
+既存の An0Mas版データがある場合、DBインポート前にバックアップが作成されます。
+
+## スクリーンショット
 
 ### DPS Overlay
 
 ![Meter](./docs/screenshots/meter.png)
 
-### Skill Tracking (with skill grouping)
+### Skill Tracking
 
 ![Meter](./docs/screenshots/skill-tracking.png)
 
-### Historical Logs (with filtering)
+### Historical Logs
 
 ![Logs](./docs/screenshots/log-history.png)
 
@@ -49,85 +74,76 @@ Overlay DPS parser/meter for Granblue Fantasy: Relink, based initially on the re
 
 ![Settings](./docs/screenshots/settings.png)
 
-## Frequently Asked Questions
+## よくある質問
 
-> Q: I closed the meter, but it's still running?
+### メーターを閉じたのに、まだ起動している
 
-When you close the windows, GBFR Logs continues to run in your task tray in the bottom right of your desktop.
+ウィンドウを閉じても、`GBFR Logs An0Mas` はタスクトレイに残ります。タスクトレイからログ画面を開き直したり、オーバーレイのクリック透過を切り替えたりできます。
 
-This task tray functionality is meant to give you more options for customizing:
+### メーターが更新されない / 何も表示されない
 
-- This lets you close the logs window, but be able to reopen it again later.
-- You can toggle clickthrough of the overlay as well.
+ゲームを起動してから `GBFR Logs An0Mas` を起動してください。必要に応じて管理者権限での起動も試してください。
 
-> Q: The meter isn't updating or displaying anything.
+### アプリが起動しない
 
-Try running the program after the game has been launched. Be sure to run the program as admin.
+`GBFR Logs An0Mas` は Microsoft Edge WebView2 Runtime を使います。WebView2 Runtime が古い、または未インストールの場合は、Microsoftのページから Evergreen Bootstrapper をインストールしてください。
 
-> Q: The application is not working / launching.
+https://developer.microsoft.com/en-us/microsoft-edge/webview2/#download
 
-GBFR Logs uses your built-in Microsoft Edge Webview2 Runtime to run the application. This keeps the app relatively small as we don't have to package in a browser.
+### ウイルス対策ソフトに検知される
 
-However, you may have an out-of-date or missing "Webview2 Runtime":
+このツールはゲームプロセスへDLLを注入し、ゲームメモリを読み取り、実行時にゲームコードへフックします。その性質上、ウイルス対策ソフトが誤検知することがあります。
 
-- Install the latest one from Microsoft: https://developer.microsoft.com/en-us/microsoft-edge/webview2/?form=MA13LH#download (Evergreen Bootstrapper should work here)
+信頼できると判断した場合のみ使用してください。必要に応じてインストール先をウイルス対策ソフトの除外設定に追加してください。
 
-> Q: Is this safe? My antivirus is marking the installation as a virus / malware.
+Windows Defender の除外設定:
+https://support.microsoft.com/windows/add-an-exclusion-to-windows-security-811816c0-4dfd-af4a-47e4-c301afe13b26
 
-As always, this is up to you to trust GBFR Logs. The program can trigger false positive flags. There are reasons why it can give such alerts:
+### 更新方法
 
-- GBFR Logs does code DLL injection into the running game process which can look like a virus-like program.
-- GBFR Logs reads game memory and modifies game code at runtime in order to receive parser data.
-- I recommend adding an exception / whitelisting for the installation folder so that your anti-virus does not delete it while your game is running, but you may not need to do so if you haven't ran into this issue.
+アプリ起動時に An0Mas fork の更新情報を確認します。手動で更新する場合は、[An0Mas版のReleases](https://github.com/An0Mas/gbfr-logs/releases) から最新の `.msi` をダウンロードして実行してください。
 
-See [how to add an exclusion to Windows Defender](https://support.microsoft.com/en-us/windows/add-an-exclusion-to-windows-security-811816c0-4dfd-af4a-47e4-c301afe13b26).
+### アンインストール方法
 
-> Q: How do I update?
+Windowsの通常のアプリ一覧から `GBFR Logs An0Mas` をアンインストールできます。必要に応じて、An0Mas版のデータフォルダも削除してください。
 
-Launching the application will automatically check for new updates!
+- `%APPDATA%\com.an0mas.gbfr-logs`
 
-Same as with installing, you can download the [latest release](https://github.com/false-spring/gbfr-logs/releases) and run the installer again and it will update over your old installation.
+upstream 版のデータフォルダとは別です。
 
-> Q: How do I uninstall?
+### 言語を追加 / 編集したい
 
-You can uninstall GBFR Logs the normal way through the Control Panel or by running the uninstall script in the folder where you installed it to. You may also want to remove these folders.
+[src-tauri/lang/README.md](./src-tauri/lang/README.md) を参照してください。
 
-- `%AppData%\gbfr-logs`
+### 不具合報告 / 要望
 
-> Q: How do I add/edit my language?
+An0Mas版の不具合や要望は [An0Mas/gbfr-logs の Issues](https://github.com/An0Mas/gbfr-logs/issues) に作成してください。Discordコミュニティに参加する場合は [Discord server](https://discord.gg/GR4r9zrqJj) を利用できます。
 
-Read [src-tauri/lang/README.md](./src-tauri/lang/README.md) for more information on how to add/edit language support!
+## 開発者向け
 
-> Q: My issue isn't listed here, or I have a suggestion.
+- nightly Rust ([rustup.rs](https://rustup.rs/)) と [Node.js](https://nodejs.org/en/download) をインストールします。
+- 依存関係は `npm ci` でインストールします。
+- 開発起動は `npm run tauri dev` を使います。
 
-Feel free to create a [new GitHub issue](https://github.com/false-spring/gbfr-logs/issues) or [join the Discord server](https://discord.gg/GR4r9zrqJj).
+主な構成:
 
-## For Developers
+- `src-hook/`: ゲームへ注入され、ダメージイベントを配信するライブラリ
+- `src-tauri/`: hookプロセスと通信し、ログ解析を行うTauri/Rustバックエンド
+- `protocol/`: hookとバックエンドで共有するメッセージプロトコル
+- `src/`: Tauri WebView上で動くReactフロントエンド
 
-- Install nightly Rust ([rustup.rs](https://rustup.rs/)) + [Node.js](https://nodejs.org/en/download).
-- Install NPM dependencies with `npm install`
-- `npm run tauri dev`
+## 支援
 
-## Under the hood
-
-This project is split up into a few subprojects:
-
-- `src-hook/` - Library that is injected into the game that broadcasts essential damage events.
-- `src-tauri/` - The Tauri Rust backend that communicates with the hooked process and does parsing.
-- `protocol/` - Defines the message protocol used by hook + back-end.
-- `src/` - The JS front-end used by the Tauri web app
-
-# Supporting the Project
-
-GBFR Logs will always be kept free and open-source (MIT). However, if you want to support me directly, [you can buy me a coffee!](https://www.buymeacoffee.com/false.spring) 🙇
+`GBFR Logs An0Mas` のfork運用を支援したい場合は、[Buy Me a Coffee](https://www.buymeacoffee.com/an0mas) から支援できます。
 
 ## Credits
 
-This project would not have been possible without the following folks:
+このプロジェクトは以下のプロジェクトと貢献に基づいています。
 
-- [nyaoouo/GBFR-ACT](https://github.com/nyaoouo/GBFR-ACT) for the original reverse engineering work.
-- [Harkain](https://github.com/Harkains) for their work on formatting and translating skills to friendly English names.
+- [false-spring/gbfr-logs](https://github.com/false-spring/gbfr-logs): upstream project
+- [nyaoouo/GBFR-ACT](https://github.com/nyaoouo/GBFR-ACT): original reverse engineering work
+- [Harkain](https://github.com/Harkains): skill name formatting and English translation work
 
 ## Disclaimer
 
-Please keep in mind that this tool is meant to improve the experience that Cygames has provided us and is not meant to cause them or anyone other players damage. GBFR Logs modifies your running game client and is not guaranteed to work after game patches, in which case you may experience instability or crashes.
+このツールは Cygames が提供する Granblue Fantasy: Relink の体験を補助する目的の非公式ツールです。ゲームクライアントを変更・監視するため、ゲームアップデート後に動作しなくなる、クラッシュする、または不安定になる可能性があります。使用は自己責任で行ってください。
