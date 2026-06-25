@@ -2,6 +2,20 @@
 
 This file contains repository-specific instructions for Codex agents working on the An0Mas fork of `gbfr-logs`.
 
+## Critical Always-Do Checklist
+
+- Run `git status --short --branch` before editing.
+- Do not touch release, updater, DB, migration, hook, protocol, parser, or app identity behavior without reading the matching `docs/agents/*.md` guidance.
+- Never claim Windows-only verification unless it was run on Windows.
+- Report skipped checks with exact blockers, attempted alternatives, and remaining risk.
+
+## Start Here
+
+- Read `Scope And Priority`, `Repo Identity`, and `Project Map` first.
+- Use `Read When` to load only the relevant detailed guide before editing.
+- Use `Initial Triage` before changes, pushes, releases, or updater work.
+- Use `Task Risk Levels` to choose verification and reporting requirements.
+
 ## Scope And Priority
 
 - These rules apply to this repository and override global AGENTS.md only for repo-specific details.
