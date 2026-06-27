@@ -35,10 +35,12 @@ The An0Mas build does not directly share the upstream database. If you want to m
 
 - Import the detected upstream `logs.db`.
 - Import a selected `logs.db` manually.
+- Export the An0Mas `logs.db` back to the upstream `GBFR Logs` app.
 - Import meter settings from upstream WebView localStorage when available.
 - Export or import settings JSON.
 
 If An0Mas data already exists, the app creates a backup before replacing the database during import.
+When exporting back to upstream, the app also backs up the upstream database before replacement.
 
 ## Screenshots
 
