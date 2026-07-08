@@ -153,10 +153,7 @@ pub fn import_database_from_path(source_path: &Path) -> Result<DatabaseImportSum
     let backup_path = backup_existing_database(&destination_path, &timestamp)?;
 
     if let Err(error) = fs::rename(&temp_path, &destination_path) {
-        if let Some(backup_path) = &backup_path {
-            let _ = fs::rename(backup_path, &destination_path);
-        }
-
+        let _ = rollback_database_replacement(backup_path.as_deref(), &destination_path);
         anyhow::bail!(error);
     }
 
@@ -217,10 +214,7 @@ pub fn export_database_to_path(destination_path: &Path) -> Result<DatabaseExport
     let backup_path = backup_existing_database(&destination_path, &timestamp)?;
 
     if let Err(error) = fs::rename(&temp_path, &destination_path) {
-        if let Some(backup_path) = &backup_path {
-            let _ = restore_database_backup(backup_path, &destination_path);
-        }
-
+        let _ = rollback_database_replacement(backup_path.as_deref(), &destination_path);
         anyhow::bail!(error);
     }
 
@@ -287,8 +281,23 @@ fn restore_database_backup(backup_path: &Path, destination_path: &Path) -> Resul
         let sidecar_backup_path = sqlite_sidecar_path(backup_path, suffix);
         if sidecar_backup_path.exists() {
             let sidecar_path = sqlite_sidecar_path(destination_path, suffix);
+            if sidecar_path.exists() {
+                fs::remove_file(&sidecar_path)?;
+            }
+
             fs::rename(sidecar_backup_path, sidecar_path)?;
         }
+    }
+
+    Ok(())
+}
+
+fn rollback_database_replacement(
+    backup_path: Option<&Path>,
+    destination_path: &Path,
+) -> Result<()> {
+    if let Some(backup_path) = backup_path {
+        restore_database_backup(backup_path, destination_path)?;
     }
 
     Ok(())
@@ -416,6 +425,50 @@ mod tests {
         let conn = Connection::open(path)?;
         let name = conn.query_row("SELECT name FROM logs WHERE id = 1", [], |row| row.get(0))?;
         Ok(name)
+    }
+
+    #[test]
+    fn rollback_database_replacement_restores_backup_sidecars() -> Result<()> {
+        let _lock = ENV_LOCK.get_or_init(|| Mutex::new(())).lock().unwrap();
+        let _env = TestEnv::new("rollback-sidecars")?;
+
+        let database_path = database_path()?;
+        create_logs_database(&database_path, "existing-log")?;
+        fs::write(sqlite_sidecar_path(&database_path, "wal"), b"wal")?;
+        fs::write(sqlite_sidecar_path(&database_path, "shm"), b"shm")?;
+
+        let backup_path = backup_existing_database(&database_path, "rollback-test")?
+            .expect("existing database should be backed up");
+        assert!(sqlite_sidecar_path(&backup_path, "wal").exists());
+        assert!(sqlite_sidecar_path(&backup_path, "shm").exists());
+        create_logs_database(&database_path, "partial-replacement")?;
+
+        rollback_database_replacement(Some(&backup_path), &database_path)?;
+
+        assert!(
+            sqlite_sidecar_path(&database_path, "wal").exists(),
+            "destination WAL was not restored; backup WAL exists: {}",
+            sqlite_sidecar_path(&backup_path, "wal").exists()
+        );
+        assert!(
+            sqlite_sidecar_path(&database_path, "shm").exists(),
+            "destination SHM was not restored; backup SHM exists: {}",
+            sqlite_sidecar_path(&backup_path, "shm").exists()
+        );
+        assert_eq!(
+            fs::read(sqlite_sidecar_path(&database_path, "wal"))?,
+            b"wal"
+        );
+        assert_eq!(
+            fs::read(sqlite_sidecar_path(&database_path, "shm"))?,
+            b"shm"
+        );
+        assert!(!backup_path.exists());
+        assert!(!sqlite_sidecar_path(&backup_path, "wal").exists());
+        assert!(!sqlite_sidecar_path(&backup_path, "shm").exists());
+        assert_eq!(first_log_name(&database_path)?, "existing-log");
+
+        Ok(())
     }
 
     #[test]
