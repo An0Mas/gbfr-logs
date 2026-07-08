@@ -35,10 +35,12 @@ An0Mas版は upstream 版のデータベースを直接共有しません。既�
 
 - 検出された upstream 版の `logs.db` をインポートできます。
 - 任意の `logs.db` を手動選択してインポートできます。
+- An0Mas版の `logs.db` を upstream 版の `GBFR Logs` へエクスポートできます。
 - upstream 版の WebView localStorage にあるメーター設定を、可能な範囲でインポートできます。
 - 設定JSONのエクスポート / インポートができます。
 
 既存の An0Mas版データがある場合、DBインポート前にバックアップが作成されます。
+upstream 版へDBエクスポートする場合も、置換前の upstream 版DBがバックアップされます。
 
 ## スクリーンショット
 

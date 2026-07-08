@@ -42,6 +42,8 @@
     "import-original-logs-database": "Import from original GBFR Logs",
     "import-selected-logs-database": "Import selected logs.db",
     "import-logs-database-confirmation": "This will replace the An0Mas logs database after creating a backup. Continue?",
+    "export-original-logs-database": "Export to original GBFR Logs",
+    "export-original-logs-database-confirmation": "This will replace the original GBFR Logs database after creating a backup. Close original GBFR Logs before continuing. Continue?",
     "app-settings": "App Settings",
     "import-original-settings": "Import from original GBFR Logs",
     "import-settings-file": "Import settings file",

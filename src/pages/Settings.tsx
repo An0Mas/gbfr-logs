@@ -24,7 +24,7 @@ import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import useSettings from "./useSettings";
 
-type DatabaseImportResponse = {
+type DatabaseTransferResponse = {
   sourcePath: string;
   destinationPath: string;
   backupPath?: string | null;
@@ -71,9 +71,14 @@ const SettingsPage = () => {
     console.info("Debug Mode:", enabled ? "Enabled" : "Disabled");
   };
 
-  const showDatabaseImportResult = (result: DatabaseImportResponse) => {
+  const showDatabaseImportResult = (result: DatabaseTransferResponse) => {
     const backupMessage = result.backupPath ? ` Backup: ${result.backupPath}` : "";
     toast.success(`Imported logs database from ${result.sourcePath}.${backupMessage}`);
+  };
+
+  const showDatabaseExportResult = (result: DatabaseTransferResponse) => {
+    const backupMessage = result.backupPath ? ` Backup: ${result.backupPath}` : "";
+    toast.success(`Exported An0Mas logs database to ${result.destinationPath}.${backupMessage}`);
   };
 
   const importOriginalLogsDatabase = async () => {
@@ -81,7 +86,7 @@ const SettingsPage = () => {
 
     setIsMigrating(true);
     try {
-      const result = await invoke<DatabaseImportResponse>("import_original_logs_database");
+      const result = await invoke<DatabaseTransferResponse>("import_original_logs_database");
       showDatabaseImportResult(result);
     } catch (e) {
       toast.error(`Failed to import original logs database: ${e}`);
@@ -95,10 +100,24 @@ const SettingsPage = () => {
 
     setIsMigrating(true);
     try {
-      const result = await invoke<DatabaseImportResponse>("import_logs_database_from_file");
+      const result = await invoke<DatabaseTransferResponse>("import_logs_database_from_file");
       showDatabaseImportResult(result);
     } catch (e) {
       toast.error(`Failed to import logs database: ${e}`);
+    } finally {
+      setIsMigrating(false);
+    }
+  };
+
+  const exportLogsDatabaseToOriginal = async () => {
+    if (!window.confirm(t("ui.export-original-logs-database-confirmation"))) return;
+
+    setIsMigrating(true);
+    try {
+      const result = await invoke<DatabaseTransferResponse>("export_logs_database_to_original");
+      showDatabaseExportResult(result);
+    } catch (e) {
+      toast.error(`Failed to export logs database to original GBFR Logs: ${e}`);
     } finally {
       setIsMigrating(false);
     }
@@ -315,6 +334,9 @@ const SettingsPage = () => {
             </Button>
             <Button loading={isMigrating} variant="light" onClick={importLogsDatabaseFromFile}>
               {t("ui.import-selected-logs-database")}
+            </Button>
+            <Button loading={isMigrating} variant="light" color="orange" onClick={exportLogsDatabaseToOriginal}>
+              {t("ui.export-original-logs-database")}
             </Button>
           </Group>
           <Divider />

@@ -304,14 +304,24 @@ struct ParseOptions {
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
-struct DatabaseImportResponse {
+struct DatabaseTransferResponse {
     source_path: String,
     destination_path: String,
     backup_path: Option<String>,
 }
 
-impl From<db::DatabaseImportSummary> for DatabaseImportResponse {
+impl From<db::DatabaseImportSummary> for DatabaseTransferResponse {
     fn from(summary: db::DatabaseImportSummary) -> Self {
+        Self {
+            source_path: path_to_string(summary.source_path),
+            destination_path: path_to_string(summary.destination_path),
+            backup_path: summary.backup_path.map(path_to_string),
+        }
+    }
+}
+
+impl From<db::DatabaseExportSummary> for DatabaseTransferResponse {
+    fn from(summary: db::DatabaseExportSummary) -> Self {
         Self {
             source_path: path_to_string(summary.source_path),
             destination_path: path_to_string(summary.destination_path),
@@ -331,14 +341,14 @@ struct SettingsExportPayload {
 }
 
 #[tauri::command]
-fn import_original_logs_database() -> Result<DatabaseImportResponse, String> {
+fn import_original_logs_database() -> Result<DatabaseTransferResponse, String> {
     db::import_first_original_database()
-        .map(DatabaseImportResponse::from)
+        .map(DatabaseTransferResponse::from)
         .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-fn import_logs_database_from_file() -> Result<DatabaseImportResponse, String> {
+fn import_logs_database_from_file() -> Result<DatabaseTransferResponse, String> {
     let file_path = FileDialogBuilder::new()
         .add_filter("SQLite database", &["db", "sqlite", "sqlite3"])
         .set_title("Import GBFR Logs Database")
@@ -346,7 +356,14 @@ fn import_logs_database_from_file() -> Result<DatabaseImportResponse, String> {
         .ok_or("No file selected!")?;
 
     db::import_database_from_path(&file_path)
-        .map(DatabaseImportResponse::from)
+        .map(DatabaseTransferResponse::from)
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn export_logs_database_to_original() -> Result<DatabaseTransferResponse, String> {
+    db::export_database_to_first_original()
+        .map(DatabaseTransferResponse::from)
         .map_err(|e| e.to_string())
 }
 
@@ -979,6 +996,7 @@ fn main() {
             delete_all_logs,
             import_original_logs_database,
             import_logs_database_from_file,
+            export_logs_database_to_original,
             export_settings_to_file,
             import_settings_from_file,
             import_settings_from_original,
